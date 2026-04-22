@@ -5,8 +5,9 @@ dist
 .env
 .env.*
 
-# Regenerated from APRA (optional: keep a local copy and/or download in CI)
-data/raw/*.xlsx
+# Raw upstream downloads are regenerated in CI; keep a local copy out of git.
+# (APRA Membership Trends / Benefits, DoH PHI Reform Trends, privatehealth.gov.au zips, etc.)
+data/raw/**
 
 # Editor
 .idea

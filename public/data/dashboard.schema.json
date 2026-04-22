@@ -3,19 +3,22 @@
   "$id": "https://example.com/phi-dashboard.schema.json",
   "title": "PHI Australia dashboard bundle",
   "type": "object",
-  "required": ["meta", "reconciliation", "national_quarterly", "jurisdiction_quarterly", "hospital_by_age_quarterly"],
+  "required": ["meta", "reconciliation", "national_quarterly", "jurisdiction_quarterly"],
   "properties": {
     "meta": {
       "type": "object",
-      "required": ["etl_build_time_utc", "source_file"],
+      "required": ["etl_build_time_utc", "source_file", "series_start_iso"],
       "properties": {
         "data_as_of": { "type": ["string", "null"] },
+        "series_start_iso": { "type": "string" },
         "etl_build_time_utc": { "type": "string" },
         "source_file": { "type": "string" },
         "apra_methodology_change_iso": { "type": "string" },
+        "tier_reform_effective_iso": { "type": "string" },
         "pop_denominator_note": { "type": "string" },
         "hospital_vs_general_note": { "type": "string" },
         "tier_note": { "type": "string" },
+        "age_source_note": { "type": "string" },
         "sources": { "type": "array", "items": { "type": "string" } }
       }
     },
@@ -30,6 +33,19 @@
         "abs_diff": { "type": ["number", "null"] },
         "tolerance": { "type": "number" },
         "message": { "type": "string" }
+      }
+    },
+    "tier_reconciliation": {
+      "type": "object",
+      "properties": {
+        "metric": { "type": "string" },
+        "quarters_compared": { "type": "integer", "minimum": 0 },
+        "worst_relative_diff": { "type": "number", "minimum": 0 },
+        "worst_quarter": { "type": ["string", "null"] },
+        "apra_at_worst": { "type": ["number", "null"] },
+        "doh_tier_sum_at_worst": { "type": ["number", "null"] },
+        "tolerance": { "type": "number" },
+        "passed": { "type": "boolean" }
       }
     },
     "national_quarterly": {
@@ -65,17 +81,39 @@
         }
       }
     },
-    "hospital_by_age_quarterly": {
+    "age_coverage_quarterly": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["quarter", "hospital_insured_by_age_band"],
+        "required": ["quarter", "bands"],
         "properties": {
           "quarter": { "type": "string" },
-          "hospital_insured_by_age_band": {
+          "bands": {
             "type": "object",
-            "additionalProperties": { "type": "number" }
+            "additionalProperties": {
+              "type": "object",
+              "required": ["insured_persons", "population", "coverage_rate"],
+              "properties": {
+                "insured_persons": { "type": "number", "minimum": 0 },
+                "population": { "type": "number", "exclusiveMinimum": 0 },
+                "coverage_rate": { "type": "number", "minimum": 0, "maximum": 1 }
+              }
+            }
           }
+        }
+      }
+    },
+    "tier_quarterly": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["quarter", "insured_persons", "share"],
+        "properties": {
+          "quarter": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" },
+          "insured_persons": { "$ref": "#/$defs/tierBlock" },
+          "share": { "$ref": "#/$defs/tierBlock" },
+          "total_insured_persons": { "type": ["number", "null"] },
+          "grand_total_published": { "type": ["number", "null"] }
         }
       }
     }
@@ -88,6 +126,16 @@
         "insured_persons": { "type": ["number", "null"] },
         "share_of_population": { "type": ["number", "null"] },
         "population_denominator": { "type": ["number", "null"] }
+      }
+    },
+    "tierBlock": {
+      "type": "object",
+      "properties": {
+        "gold": { "type": ["number", "null"] },
+        "silver": { "type": ["number", "null"] },
+        "bronze": { "type": ["number", "null"] },
+        "basic": { "type": ["number", "null"] },
+        "other": { "type": ["number", "null"] }
       }
     }
   }
