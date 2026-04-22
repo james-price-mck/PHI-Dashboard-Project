@@ -29,7 +29,8 @@ Static React dashboard (Vite) for **insured persons** and **population shares** 
 
 5. For **GitHub Pages** (project site at `/<repo-name>/`):
 
-   - Set the repository name in the workflow (or set `VITE_BASE` in the “Build” step) to `/${{ github.event.repository.name }}/`. The default workflow uses this pattern.
+   - **Enable Pages once** (required or `deploy-pages` returns **404 Not Found**): go to **Settings → Pages → Build and deployment → Source** and choose **GitHub Actions** (not “Deploy from a branch”). Without this, the workflow can build and upload an artifact but **Create Pages deployment** fails.
+   - The workflow sets `VITE_BASE` to `/${{ github.event.repository.name }}/` for project-site URLs.
 
 6. **Reconciliation** (optional gate): the ETL loads `etl/expected_reconciliation.json` and compares the **last** quarter’s **national hospital insured persons** to `hospital_insured_national`. **Update** that file when you refresh the APRA workbook so CI keeps passing, or use `--no-fail-reconcile` for local experiments.
 
