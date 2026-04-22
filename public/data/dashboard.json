@@ -2,7 +2,7 @@
   "meta": {
     "data_as_of": "2025-12-31",
     "series_start_iso": "2019-04-01",
-    "etl_build_time_utc": "2026-04-22T06:17:46.166951+00:00",
+    "etl_build_time_utc": "2026-04-22T06:42:31.435990+00:00",
     "source_file": "membership_trends_dec_2025.xlsx",
     "apra_methodology_change_iso": "2023-07-01",
     "tier_reform_effective_iso": "2019-04-01",

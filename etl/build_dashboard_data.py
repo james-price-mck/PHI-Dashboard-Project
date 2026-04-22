@@ -696,10 +696,12 @@ def main() -> None:
     p.add_argument(
         "--tier-xlsx",
         type=Path,
-        default=Path("data/raw/phi_reform_trends.xlsx"),
+        default=Path("data/sources/phi_reform_trends_dec_2025.xlsx"),
         help=(
             "Department of Health 'Private Health Insurance Reform Data Quarterly "
-            "Trends Report' workbook (sheet '4 HT by Product Tier')."
+            "Trends Report' workbook (sheet '4 HT by Product Tier'). Checked into "
+            "the repo under data/sources/ — health.gov.au's CDN is not reliable "
+            "from CI runners."
         ),
     )
     p.add_argument(

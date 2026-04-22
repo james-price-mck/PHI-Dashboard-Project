@@ -11,11 +11,12 @@ Deployable to **GitHub Pages** with **GitHub Actions**.
 
 ## Quick start
 
-1. **Download source files** into `data/raw/`:
+1. **Download source files** into `data/raw/` (this directory is gitignored — not checked in):
 
    - APRA *Membership Trends* (e.g. `data/raw/membership_trends_dec_2025.xlsx`) from [APRA — Private health insurance membership and coverage](https://www.apra.gov.au/publications/private-health-insurance-membership-and-coverage).
    - APRA *Membership and Benefits* (e.g. `data/raw/membership_benefits_dec_2025.xlsx`) from the same APRA page.
-   - DoH *PHI Reform Data Quarterly Trends Report* (e.g. `data/raw/phi_reform_trends.xlsx`) from [health.gov.au](https://www.health.gov.au/resources/publications/private-health-insurance-reform-data-quarterly-trends-report).
+
+   The **DoH** *PHI Reform Data Quarterly Trends Report* is **checked into the repo** under `data/sources/` because `health.gov.au`'s CDN is unreliable from GitHub Actions runners. See [`data/sources/README.md`](data/sources/README.md) for the quarterly refresh procedure.
 
 2. **Fetch ABS ERP** (writes `data/curated/abs_erp_national_5y.csv`):
 
@@ -29,8 +30,8 @@ Deployable to **GitHub Pages** with **GitHub Actions**.
    ```bash
    python etl/build_dashboard_data.py \
      --xlsx data/raw/membership_trends_dec_2025.xlsx \
-     --membership-benefits data/raw/membership_benefits_dec_2025.xlsx \
-     --tier-xlsx data/raw/phi_reform_trends.xlsx
+     --membership-benefits data/raw/membership_benefits_dec_2025.xlsx
+   # --tier-xlsx defaults to data/sources/phi_reform_trends_dec_2025.xlsx
    ```
 
 4. **Front end** (produces `package-lock.json`; **commit the lockfile** for faster, reliable CI):

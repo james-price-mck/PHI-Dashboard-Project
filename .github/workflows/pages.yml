@@ -37,14 +37,19 @@ jobs:
       - name: Install Python deps
         run: pip install -r etl/requirements.txt
 
-      - name: Download source workbooks (APRA + DoH)
-        # health.gov.au's CDN intermittently resets HTTP/2 connections from GitHub-hosted
-        # runners with curl's default settings (INTERNAL_ERROR / err 2). Force HTTP/1.1,
-        # send a browser-looking User-Agent, and retry with backoff to ride that out.
-        # Also sanity-check each file is non-trivial (>= 100 KB) so a truncated or
-        # HTML-error response cannot silently feed a garbage xlsx into the ETL.
-        # URLs are pinned to the Dec-2025 editions; refresh alongside
+      - name: Download APRA source workbooks
+        # APRA's CDN has been reliable from Actions runners, but we still harden the
+        # downloads: force HTTP/1.1 to avoid the HTTP/2 stream-reset class of errors,
+        # send a browser-looking User-Agent, retry with backoff, and sanity-check
+        # that each file is non-trivial (>= 100 KB) so a truncated or HTML-error
+        # response cannot silently feed a garbage xlsx into the ETL.
+        # URLs pin the Dec-2025 editions; refresh alongside
         # etl/expected_reconciliation.json when new quarters publish.
+        #
+        # The DoH PHI Reform Trends workbook is checked in at
+        # data/sources/phi_reform_trends_dec_2025.xlsx — health.gov.au's CDN resets
+        # HTTP/2 streams from Actions runners too aggressively to download reliably.
+        timeout-minutes: 10
         run: |
           set -euo pipefail
           mkdir -p data/raw
@@ -65,10 +70,13 @@ jobs:
           }
           fetch "https://www.apra.gov.au/sites/default/files/2026-02/Quarterly%20Private%20Health%20Insurance%20Membership%20Trends%20December%202025.xlsx" data/raw/membership_trends.xlsx
           fetch "https://www.apra.gov.au/sites/default/files/2026-02/Quarterly%20Private%20Health%20Insurance%20Membership%20and%20Benefits%20December%202025.xlsx" data/raw/membership_benefits.xlsx
-          fetch "https://www.health.gov.au/sites/default/files/2026-03/private-health-insurance-reform-data-quarterly-trends-report.xlsx" data/raw/phi_reform_trends.xlsx
 
       - name: Fetch ABS ERP 5-year age bands (SDMX)
         # Curates data/curated/abs_erp_national_5y.csv via the ABS Data API.
+        # A committed copy exists at data/curated/abs_erp_national_5y.csv; if the
+        # ABS API is unavailable this step fails loudly rather than silently
+        # using stale data — re-enable the fallback if that becomes a problem.
+        timeout-minutes: 5
         run: |
           mkdir -p data/curated
           python etl/fetch_abs_erp.py --out data/curated/abs_erp_national_5y.csv
@@ -79,7 +87,7 @@ jobs:
             --xlsx data/raw/membership_trends.xlsx \
             --membership-benefits data/raw/membership_benefits.xlsx \
             --abs-erp data/curated/abs_erp_national_5y.csv \
-            --tier-xlsx data/raw/phi_reform_trends.xlsx \
+            --tier-xlsx data/sources/phi_reform_trends_dec_2025.xlsx \
             --out public/data/dashboard.json
         # Reconciliation uses etl/expected_reconciliation.json (must match workbook vintage).
 
