@@ -13,7 +13,7 @@ Static React dashboard (Vite) for **insured persons** and **population shares** 
    python etl/build_dashboard_data.py --xlsx data/raw/membership_trends_dec_2025.xlsx
    ```
 
-3. **Front end**:
+3. **Front end** (produces `package-lock.json`; **commit the lockfile** for faster, reliable CI):
 
    ```bash
    npm install
