@@ -2,6 +2,12 @@
 # you refresh the APRA workbook so the ETL check still passes.
 name: Build and deploy to GitHub Pages
 
+# Align with GitHub’s migration off Node 20 for Actions internals (by Sept 2026). First-party
+# actions are bumped below; this opt-in is harmless if already on Node-24–based action releases.
+# https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 on:
   push:
     branches: [main, master]
@@ -22,9 +28,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
@@ -42,9 +48,10 @@ jobs:
           python etl/build_dashboard_data.py --xlsx data/raw/membership_trends.xlsx --out public/data/dashboard.json
         # Reconciliation uses etl/expected_reconciliation.json (must match workbook vintage).
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: "20"
+          # Runtime for Vite build (LTS; not the same as Actions’ internal Node, but 22+ is supported).
+          node-version: "22"
           # Re-enable with `cache: npm` after committing package-lock.json from `npm install`.
 
       - name: Install npm dependencies
@@ -56,7 +63,7 @@ jobs:
           VITE_BASE: /${{ github.event.repository.name }}/
         run: npm run build
 
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: dist
 
@@ -71,4 +78,4 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
