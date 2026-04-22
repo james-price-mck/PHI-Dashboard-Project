@@ -1,0 +1,13 @@
+node_modules
+dist
+.DS_Store
+*.log
+.env
+.env.*
+
+# Regenerated from APRA (optional: keep a local copy and/or download in CI)
+data/raw/*.xlsx
+
+# Editor
+.idea
+.vscode

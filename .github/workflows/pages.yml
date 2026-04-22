@@ -1,0 +1,72 @@
+# Build static site and deploy to GitHub Pages. Updates expected_reconciliation.json when
+# you refresh the APRA workbook so the ETL check still passes.
+name: Build and deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main, master]
+  schedule:
+    - cron: "0 5 1 * *" # monthly — optional; set URL in Download step when APRA publishes
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Python deps
+        run: pip install -r etl/requirements.txt
+
+      - name: Download APRA Membership Trends (December 2025)
+        # Pin URL: update to current publication when you bump expected_reconciliation.json
+        run: |
+          mkdir -p data/raw
+          curl -fsSL "https://www.apra.gov.au/sites/default/files/2026-02/Quarterly%20Private%20Health%20Insurance%20Membership%20Trends%20December%202025.xlsx" -o data/raw/membership_trends.xlsx
+
+      - name: Build dashboard data
+        run: |
+          python etl/build_dashboard_data.py --xlsx data/raw/membership_trends.xlsx --out public/data/dashboard.json
+        # Reconciliation uses etl/expected_reconciliation.json (must match workbook vintage).
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: package-lock.json
+
+      - name: Install npm dependencies
+        run: |
+          if [ -f package-lock.json ]; then npm ci; else npm install; fi
+
+      - name: Build site
+        env:
+          VITE_BASE: /${{ github.event.repository.name }}/
+        run: npm run build
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
