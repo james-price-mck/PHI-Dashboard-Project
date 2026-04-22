@@ -37,22 +37,35 @@ jobs:
       - name: Install Python deps
         run: pip install -r etl/requirements.txt
 
-      - name: Download APRA Membership Trends (December 2025)
-        # Pin URL: update to current publication when you bump expected_reconciliation.json.
+      - name: Download source workbooks (APRA + DoH)
+        # health.gov.au's CDN intermittently resets HTTP/2 connections from GitHub-hosted
+        # runners with curl's default settings (INTERNAL_ERROR / err 2). Force HTTP/1.1,
+        # send a browser-looking User-Agent, and retry with backoff to ride that out.
+        # Also sanity-check each file is non-trivial (>= 100 KB) so a truncated or
+        # HTML-error response cannot silently feed a garbage xlsx into the ETL.
+        # URLs are pinned to the Dec-2025 editions; refresh alongside
+        # etl/expected_reconciliation.json when new quarters publish.
         run: |
+          set -euo pipefail
           mkdir -p data/raw
-          curl -fsSL "https://www.apra.gov.au/sites/default/files/2026-02/Quarterly%20Private%20Health%20Insurance%20Membership%20Trends%20December%202025.xlsx" -o data/raw/membership_trends.xlsx
-
-      - name: Download APRA Membership and Benefits (December 2025)
-        # Source of AgeCohort_HT (hospital insured persons by 5-year age band, quarterly).
-        run: |
-          curl -fsSL "https://www.apra.gov.au/sites/default/files/2026-02/Quarterly%20Private%20Health%20Insurance%20Membership%20and%20Benefits%20December%202025.xlsx" -o data/raw/membership_benefits.xlsx
-
-      - name: Download DoH PHI Reform Trends (Dec 2025 edition)
-        # Source of tier_quarterly — sheet "4 HT by Product Tier", insured-persons block.
-        # URL updated 7 Jan 2026; refresh when DoH publishes the next quarter.
-        run: |
-          curl -fsSL "https://www.health.gov.au/sites/default/files/2026-03/private-health-insurance-reform-data-quarterly-trends-report.xlsx" -o data/raw/phi_reform_trends.xlsx
+          fetch() {
+            local url="$1" out="$2"
+            echo "==> $out"
+            curl -fL --http1.1 \
+              -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) PHI-Dashboard-CI/1.0" \
+              --retry 5 --retry-delay 5 --retry-all-errors \
+              --connect-timeout 30 --max-time 300 \
+              -o "$out" "$url"
+            size=$(stat -c%s "$out")
+            if [ "$size" -lt 102400 ]; then
+              echo "ERROR: $out is only $size bytes — refusing to continue." >&2
+              exit 1
+            fi
+            echo "    ok ($size bytes)"
+          }
+          fetch "https://www.apra.gov.au/sites/default/files/2026-02/Quarterly%20Private%20Health%20Insurance%20Membership%20Trends%20December%202025.xlsx" data/raw/membership_trends.xlsx
+          fetch "https://www.apra.gov.au/sites/default/files/2026-02/Quarterly%20Private%20Health%20Insurance%20Membership%20and%20Benefits%20December%202025.xlsx" data/raw/membership_benefits.xlsx
+          fetch "https://www.health.gov.au/sites/default/files/2026-03/private-health-insurance-reform-data-quarterly-trends-report.xlsx" data/raw/phi_reform_trends.xlsx
 
       - name: Fetch ABS ERP 5-year age bands (SDMX)
         # Curates data/curated/abs_erp_national_5y.csv via the ABS Data API.
