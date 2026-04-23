@@ -145,7 +145,7 @@ export function App() {
   // Action-title copy is computed from live data so it stays accurate after each refresh.
   const growthTitle =
     hPct != null && hDelta != null
-      ? `Private health cover has grown ${Math.round(hPct)}% since the 2019 reforms, adding ${fmtCompactSigned(hDelta).replace("+", "")} insured lives.`
+      ? `Private health cover has grown ${Math.round(hPct)}% since the 2019 reforms, adding ${fmtCompactSigned(hDelta).replace("+", "")} customers.`
       : "Private health cover has grown since the 2019 reforms.";
 
   const tradeDownTitle =
@@ -333,7 +333,7 @@ export function App() {
                   <>
                     65-and-overs account for{" "}
                     <strong>{cohort65ShareOfDecisionNetNew.toFixed(0)}%</strong> of net new
-                    decision-age insured lives since {baselineYear}, and have been the volume
+                    decision-age customers since {baselineYear}, and have been the volume
                     engine behind the overall rise in coverage.
                   </>
                 ) : (

@@ -182,7 +182,7 @@ export function GrowthByAgeChart({ rows, baselineQuarter, latestQuarter }: Props
                       ? `${(r.populationShare25Plus * 100).toFixed(0)}% of 25+ adults`
                       : "";
                   return [
-                    `${fmtSignedPp(r.coverageDeltaPp)} · ${fmtNetNew(r.netNew)} insured lives · ${ratePart} · ${sharePart}`,
+                    `${fmtSignedPp(r.coverageDeltaPp)} · ${fmtNetNew(r.netNew)} customers · ${ratePart} · ${sharePart}`,
                     r.label,
                   ];
                 }}
@@ -231,7 +231,7 @@ export function GrowthByAgeChart({ rows, baselineQuarter, latestQuarter }: Props
               fontWeight: 700,
             }}
           >
-            Net new insured lives since {baselineYear}
+            Net new customers since {baselineYear}
           </div>
           {chartData.map((r) => (
             <div
@@ -308,7 +308,7 @@ export function GrowthByAgeChart({ rows, baselineQuarter, latestQuarter }: Props
         cohort's share of the 25-plus adult population at the latest quarter. Net new insured
         lives are shown in the side panel.
         {under25 != null && Number.isFinite(under25.netNew)
-          ? ` Under-25s (typically dependants on a family policy, not independent decision-makers) are excluded; they contributed ${fmtNetNew(under25.netNew)} net new insured lives over the same window.`
+          ? ` Under-25s (typically dependants on a family policy, not independent decision-makers) are excluded. They contributed ${fmtNetNew(under25.netNew)} net new customers over the same window.`
           : ""}
       </p>
     </div>
