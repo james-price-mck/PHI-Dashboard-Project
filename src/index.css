@@ -204,6 +204,16 @@ h2.section-title {
   color: var(--ink);
 }
 
+.section-eyebrow {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent-2);
+  margin: 0 0 0.35rem;
+}
+
 .lead {
   color: var(--muted);
   font-size: 0.95rem;

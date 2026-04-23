@@ -34,7 +34,10 @@ Deployable to **GitHub Pages** with **GitHub Actions**.
    # --tier-xlsx defaults to data/sources/phi_reform_trends_dec_2025.xlsx
    ```
 
-4. **Premium index (annual refresh)** — `public/data/premium_tiers.json` is checked in for the “Gold premiums diverged” chart. After each **1 April** premium round, update **DoH** [average annual price changes](https://www.health.gov.au/resources/publications/average-annual-price-changes-in-private-health-insurance-premiums) (industry average) and, if needed, **tier-level** estimates from insurer filings or industry analysis (e.g. CHOICE). See `meta.notes` inside the JSON.
+4. **Premium tiers (annual refresh)** — `public/data/premium_tiers.json` backs the “Gold premiums diverged” section. After each **1 April** premium round, update:
+   - `industry_average_pct` — one entry per round, from **DoH** [average annual price changes](https://www.health.gov.au/resources/publications/average-annual-price-changes-in-private-health-insurance-premiums).
+   - `tier_rounds` — one entry per round where credible per-tier figures exist (today: the big-five CHOICE analyses of the April 2025 and April 2026 rounds). Each entry carries `gold`, `silver`, `bronze`, `basic`, the matching `industry_avg_pct`, and a `source` string.
+   - `multi_year_observations` — aggregate Gold-vs-industry statements (e.g. the CHOICE 5-year number). Do **not** backfill per-tier figures with industry-average fallbacks; that was the misleading pattern we removed.
 
 5. **Front end** (produces `package-lock.json`; **commit the lockfile** for faster, reliable CI):
 

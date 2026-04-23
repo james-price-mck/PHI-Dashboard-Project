@@ -9,59 +9,22 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { fmtPct, shortQuarterLabel } from "../format";
+import { shortQuarterLabel } from "../format";
 import type { AgeCoverageQuarter } from "../types";
-import { BASELINE_QUARTER } from "../insights";
+import { AGE_YOY_GROUPS, computeAgeYoyGrowthSeries } from "../insights";
 
-const THREE_GROUPS: { key: string; label: string; bands: string[]; color: string }[] = [
-  {
-    key: "u35",
-    label: "Under 35",
-    bands: [
-      "0-4",
-      "5-9",
-      "10-14",
-      "15-19",
-      "20-24",
-      "25-29",
-      "30-34",
-    ],
-    color: "var(--accent-2)",
-  },
-  {
-    key: "m35_64",
-    label: "35–64",
-    bands: ["35-39", "40-44", "45-49", "50-54", "55-59", "60-64"],
-    color: "var(--ink)",
-  },
-  {
-    key: "o65",
-    label: "65 and over",
-    bands: ["65-69", "70-74", "75-79", "80+"],
-    color: "var(--chart-blue-3)",
-  },
-];
+const GROUP_META: Record<string, { label: string; color: string }> = {
+  u35: { label: "Under 35", color: "var(--accent-2)" },
+  m35_64: { label: "35–64", color: "var(--ink)" },
+  o65: { label: "65 and over", color: "var(--chart-blue-3)" },
+};
 
-type Row = Record<string, string | number | null>;
-
-function aggregateTrend(quarters: AgeCoverageQuarter[]): Row[] {
-  return quarters.map((q) => {
-    const row: Row = { quarter: shortQuarterLabel(q.quarter) };
-    for (const g of THREE_GROUPS) {
-      let insured = 0;
-      let pop = 0;
-      for (const b of g.bands) {
-        const band = q.bands[b];
-        if (band) {
-          insured += band.insured_persons;
-          pop += band.population;
-        }
-      }
-      row[g.key] = pop > 0 ? insured / pop : null;
-    }
-    return row;
-  });
-}
+type ChartRow = {
+  quarter: string;
+  u35: number | null;
+  m35_64: number | null;
+  o65: number | null;
+};
 
 const tooltipStyle = {
   backgroundColor: "#fff",
@@ -76,56 +39,66 @@ type Props = {
 };
 
 export function AgeCoverageChart({ data }: Props) {
-  const trend = useMemo(() => aggregateTrend(data), [data]);
-  const baselineLabel = shortQuarterLabel(BASELINE_QUARTER);
-  const last = trend.at(-1);
+  const chartData: ChartRow[] = useMemo(() => {
+    const series = computeAgeYoyGrowthSeries(data);
+    return series
+      .filter((r) => r.u35 != null || r.m35_64 != null || r.o65 != null)
+      .map((r) => ({
+        quarter: shortQuarterLabel(r.quarter),
+        u35: r.u35,
+        m35_64: r.m35_64,
+        o65: r.o65,
+      }));
+  }, [data]);
+
+  const last = chartData.at(-1);
 
   return (
     <div
       className="chart-panel chart-panel--tall"
       role="img"
-      aria-label="Hospital cover rate by broad age group over time; under thirty five rises while older groups are flatter."
+      aria-label="Year on year growth in insured persons by broad age group. Under thirty fives consistently outpace older cohorts."
     >
       <div style={{ display: "flex", gap: 12, alignItems: "stretch" }}>
         <div style={{ flex: "1 1 auto", minWidth: 0, height: 320 }}>
           <ResponsiveContainer width="100%" height={320}>
-            <LineChart data={trend} margin={{ top: 12, right: 12, left: 4, bottom: 8 }}>
+            <LineChart data={chartData} margin={{ top: 12, right: 12, left: 4, bottom: 8 }}>
               <CartesianGrid stroke="var(--grid)" vertical={false} />
-              <XAxis dataKey="quarter" minTickGap={24} tick={{ fill: "var(--muted)", fontSize: 10 }} />
+              <XAxis
+                dataKey="quarter"
+                minTickGap={24}
+                tick={{ fill: "var(--muted)", fontSize: 10 }}
+              />
               <YAxis
-                tickFormatter={(v: number) => `${(v * 100).toFixed(0)}%`}
-                domain={[0.3, 0.85]}
+                tickFormatter={(v: number) => `${(v * 100).toFixed(1)}%`}
                 tick={{ fill: "var(--muted)", fontSize: 11 }}
-                width={44}
+                width={52}
               />
               <Tooltip
                 contentStyle={tooltipStyle}
-                formatter={(v: number | string) => {
-                  if (typeof v !== "number" || !Number.isFinite(v)) return ["—"];
-                  return [`${(v * 100).toFixed(1)}%`];
+                formatter={(v: number | string, name: string) => {
+                  if (typeof v !== "number" || !Number.isFinite(v)) return ["—", name];
+                  const sign = v >= 0 ? "+" : "";
+                  return [`${sign}${(v * 100).toFixed(2)}%`, name];
                 }}
+                labelFormatter={(l: string) => `Year to ${l}`}
               />
               <ReferenceLine
-                x={baselineLabel}
-                stroke="var(--muted)"
+                y={0}
+                stroke="var(--chart-ink-muted)"
                 strokeDasharray="3 3"
-                strokeOpacity={0.55}
-                label={{
-                  value: "Stable tier window from here",
-                  position: "insideTopLeft",
-                  fill: "var(--muted)",
-                  fontSize: 10,
-                }}
+                strokeOpacity={0.7}
               />
-              {THREE_GROUPS.map((g) => (
+              {AGE_YOY_GROUPS.map((g) => (
                 <Line
                   key={g.key}
                   type="monotone"
                   dataKey={g.key}
-                  name={g.label}
-                  stroke={g.color}
+                  name={GROUP_META[g.key].label}
+                  stroke={GROUP_META[g.key].color}
                   strokeWidth={2.5}
                   dot={false}
+                  connectNulls={false}
                   isAnimationActive={false}
                 />
               ))}
@@ -140,14 +113,18 @@ export function AgeCoverageChart({ data }: Props) {
               flexDirection: "column",
               justifyContent: "center",
               gap: 8,
-              minWidth: 110,
+              minWidth: 130,
               paddingTop: 12,
               paddingBottom: 8,
             }}
           >
-            {THREE_GROUPS.map((g) => {
+            <div style={{ color: "var(--muted)", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+              Latest YoY — {last.quarter}
+            </div>
+            {AGE_YOY_GROUPS.map((g) => {
               const v = last[g.key];
               const num = typeof v === "number" ? v : null;
+              const meta = GROUP_META[g.key];
               return (
                 <div key={g.key} style={{ fontSize: 12, lineHeight: 1.2 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
@@ -155,13 +132,13 @@ export function AgeCoverageChart({ data }: Props) {
                       style={{
                         width: 10,
                         height: 10,
-                        background: g.color,
+                        background: meta.color,
                         borderRadius: 2,
                         display: "inline-block",
                         flex: "0 0 auto",
                       }}
                     />
-                    <span style={{ color: "var(--ink)", fontWeight: 600 }}>{g.label}</span>
+                    <span style={{ color: "var(--ink)", fontWeight: 600 }}>{meta.label}</span>
                   </div>
                   <div
                     style={{
@@ -170,7 +147,7 @@ export function AgeCoverageChart({ data }: Props) {
                       paddingLeft: 16,
                     }}
                   >
-                    {num != null ? `${fmtPct(num)}%` : "—"}
+                    {num != null ? `${num >= 0 ? "+" : ""}${(num * 100).toFixed(2)}%` : "—"}
                   </div>
                 </div>
               );

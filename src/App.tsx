@@ -5,7 +5,7 @@ import { GrowthByAgeChart } from "./components/GrowthByAgeChart";
 import { InsightHeadline } from "./components/InsightHeadline";
 import { JurisdictionChart } from "./components/JurisdictionChart";
 import { KpiTile } from "./components/KpiTile";
-import { PremiumIndexChart, buildPremiumIndexSeries } from "./components/PremiumIndexChart";
+import { PremiumRoundBarChart } from "./components/PremiumRoundBarChart";
 import { TierGoldShareChart } from "./components/TierGoldShareChart";
 import { TierQuarterlyChart } from "./components/TierQuarterlyChart";
 import { fmtInt, fmtPct, jurisdictionDisplayName, shortQuarterLabel } from "./format";
@@ -103,16 +103,8 @@ export function App() {
   const topState = stateMovers[0];
   const bottomState = stateMovers.at(-1);
 
-  const premiumSeries = premium ? buildPremiumIndexSeries(premium) : [];
-  const premiumEnd = premiumSeries.at(-1);
-  const premiumGoldCum =
-    premiumSeries.length >= 2
-      ? ((premiumEnd?.gold ?? 100) / 100 - 1) * 100
-      : null;
-  const premiumIndCum =
-    premiumSeries.length >= 2
-      ? ((premiumEnd?.industry ?? 100) / 100 - 1) * 100
-      : null;
+  const goldFiveYear = premium?.multi_year_observations.find((o) => o.id === "gold_vs_industry_5y") ?? null;
+  const round2025 = premium?.tier_rounds.find((r) => r.effective.startsWith("2025")) ?? null;
 
   const tierHeroSubtitle =
     goldShareLatest != null && tierInsight.goldShareThen != null
@@ -131,7 +123,7 @@ export function App() {
         </p>
         <p className="muted" style={{ marginTop: 4 }}>
           APRA membership trends, Department of Health, Disability and Ageing tier data, ABS
-          population. Premium index from DoH industry rounds and CHOICE big-five tier estimates (
+          population. Premium tier data from DoH industry rounds and CHOICE big-five estimates (
           <code>public/data/premium_tiers.json</code>).
         </p>
 
@@ -206,18 +198,24 @@ export function App() {
           />
         </div>
 
-        <div style={{ marginTop: "1.5rem" }}>
-          <p className="insight-sub" style={{ marginBottom: 8 }}>
-            National trajectory — hospital cover and extras (do not sum the two series; overlap is
-            material).
-          </p>
-          <CoverageCombinedChart data={data.national_quarterly} />
-        </div>
       </div>
 
+      <section className="insight-section" aria-labelledby="sec-growth">
+        <span className="section-eyebrow">1A · Growth</span>
+        <h2 id="sec-growth" className="section-title">
+          Cover is growing
+        </h2>
+        <InsightHeadline
+          title="The number of Australians with hospital cover and extras has kept climbing since the 2019 tier reforms, and both series now sit above pre-reform levels."
+          subtitle="Hospital cover and extras are separate series — a person can hold both, so the two lines should not be read as additive."
+        />
+        <CoverageCombinedChart data={data.national_quarterly} />
+      </section>
+
       <section className="insight-section" aria-labelledby="sec-tier">
+        <span className="section-eyebrow">1B · Trade-down</span>
         <h2 id="sec-tier" className="section-title">
-          The market is trading down
+          But the market is trading down
         </h2>
         <InsightHeadline
           title="Product tier mix is shifting from Gold toward Silver and Bronze — the defining structural move in hospital cover since mandatory tiers."
@@ -233,33 +231,56 @@ export function App() {
       </section>
 
       <section className="insight-section" aria-labelledby="sec-premium">
+        <span className="section-eyebrow">2A · Premiums as a driver</span>
         <h2 id="sec-premium" className="section-title">
           Gold premiums have diverged sharply
         </h2>
-        {premium && premiumEnd ? (
+        {premium ? (
           <>
             <p className="big-stat">
-              Gold premiums up about{" "}
-              <span className="emph-blue">+{premiumGoldCum != null ? premiumGoldCum.toFixed(0) : "—"}%</span>{" "}
-              cumulatively since 2020, versus{" "}
-              <span className="emph-muted">+{premiumIndCum != null ? premiumIndCum.toFixed(0) : "—"}%</span>{" "}
-              for the industry average — and Gold&apos;s share of hospital cover has fallen by{" "}
+              Gold hospital premiums are up roughly{" "}
+              <span className="emph-blue">
+                +{goldFiveYear?.cumulative_pct != null ? goldFiveYear.cumulative_pct.toFixed(0) : "—"}%
+              </span>{" "}
+              over 5 years ({goldFiveYear?.window_label ?? "Jan 2021 to Apr 2025"}), versus{" "}
+              <span className="emph-muted">
+                +{goldFiveYear?.industry_avg_pct != null ? goldFiveYear.industry_avg_pct.toFixed(0) : "—"}%
+              </span>{" "}
+              for the industry-weighted average — and Gold&apos;s share of hospital cover has fallen
+              by{" "}
               <span className="emph-ink">
                 {tierInsight.goldDeltaPp != null ? `${Math.abs(tierInsight.goldDeltaPp).toFixed(1)} pp` : "—"}
               </span>{" "}
-              over the same window.
+              since {shortQuarterLabel(BASELINE_QUARTER)}.
             </p>
             <p className="insight-sub">
-              Per-tier increases are only published in machine-readable form for the 2025 and 2026
-              rounds (CHOICE big-five). For 2020–2024 the chart conservatively uses the DoH industry
-              average (dashed segments) — a lower-bound assumption. Even so, the Gold–vs–industry gap
-              opens decisively from 2025. Households appear to be responding to price. Sources:{" "}
+              In the April 2025 premium round alone, Gold premiums across the big-five insurers
+              rose about{" "}
+              <strong>+{round2025?.gold != null ? round2025.gold.toFixed(1) : "—"}%</strong> — while
+              Silver, Bronze and Basic each rose 3% or less, and the DoH industry-weighted average
+              was just{" "}
+              <strong>
+                +{round2025?.industry_avg_pct != null ? round2025.industry_avg_pct.toFixed(2) : "—"}%
+              </strong>
+              . Households appear to be responding to price — trading out of Gold as the premium
+              gap widens.
+            </p>
+            <p className="insight-sub" style={{ fontSize: "0.8rem" }}>
+              Sources:{" "}
+              <a
+                href="https://www.choice.com.au/money/insurance/health/articles/insurers-hiding-soaring-increases-to-top-level-health-cover"
+                target="_blank"
+                rel="noreferrer"
+              >
+                CHOICE (Feb 2026) — 5-year Gold vs industry average
+              </a>
+              ;{" "}
               <a
                 href="https://www.choice.com.au/money/insurance/health/articles/health-insurance-price-hikes-higher-than-ever-what-youre-really-paying"
                 target="_blank"
                 rel="noreferrer"
               >
-                CHOICE (Mar 2026)
+                CHOICE (Mar 2026) — big-five per-tier breakdown
               </a>
               ;{" "}
               <a
@@ -267,24 +288,27 @@ export function App() {
                 target="_blank"
                 rel="noreferrer"
               >
-                DoH premium rounds
+                DoH industry-average premium rounds
               </a>
-              .
+              . Credible per-tier estimates only exist for the April 2025 and April 2026 rounds
+              (chart below); for earlier years the DoH industry-weighted average is the only
+              published figure.
             </p>
             <div className="two-panel">
-              <PremiumIndexChart data={premium} />
+              <PremiumRoundBarChart data={premium} />
               {tierSeries.length > 0 ? <TierGoldShareChart data={tierSeries} /> : null}
             </div>
           </>
         ) : (
           <p className="muted">
             Premium tier file missing — add <code>public/data/premium_tiers.json</code> to show the
-            price index.
+            premium-round comparison.
           </p>
         )}
       </section>
 
       <section className="insight-section" aria-labelledby="sec-age">
+        <span className="section-eyebrow">2B · Demographics as a driver</span>
         <h2 id="sec-age" className="section-title">
           Who&apos;s joining, what are they buying?
         </h2>
@@ -304,8 +328,9 @@ export function App() {
             />
             <GrowthByAgeChart rows={ageGrowthRows} />
             <p className="insight-sub" style={{ marginTop: 12 }}>
-              Coverage rate (hospital) by broad age group — younger cohorts had more room to rise;
-              older cohorts were already high.
+              Year-on-year growth in insured persons by broad age group (trailing four quarters) —
+              under-35s consistently outpace older cohorts, so net new members are disproportionately
+              younger. A 0% reference line marks the zero-growth baseline.
             </p>
             <AgeCoverageChart data={data.age_coverage_quarterly} />
             <div className="callout-box">
@@ -396,7 +421,7 @@ export function App() {
           )}
           {premium && (
             <p>
-              <strong>Premium index:</strong> {premium.meta.notes} Last reviewed{" "}
+              <strong>Premium tiers:</strong> {premium.meta.notes} Last reviewed{" "}
               {premium.meta.last_reviewed}.
             </p>
           )}
@@ -415,8 +440,9 @@ export function App() {
       </details>
 
       <section className="appendix" aria-labelledby="sec-appendix">
+        <span className="section-eyebrow">3 · Appendix</span>
         <h2 id="sec-appendix" className="section-title">
-          Appendix — states and territories
+          States and territories
         </h2>
         <p className="lead">
           Hospital-cover rates have risen in parallel across states (typically about 1–3 pp since{" "}

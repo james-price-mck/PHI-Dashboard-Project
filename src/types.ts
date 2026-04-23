@@ -66,13 +66,31 @@ export type TierReconciliation = {
   passed: boolean;
 };
 
-export type PremiumAnnualRow = {
+export type PremiumIndustryRow = {
   effective: string;
-  industry_avg: number;
-  gold?: number | null;
-  silver?: number | null;
-  bronze?: number | null;
-  basic?: number | null;
+  increase_pct: number;
+};
+
+export type PremiumTierRound = {
+  effective: string;
+  label: string;
+  industry_avg_pct: number;
+  gold: number;
+  silver: number;
+  bronze: number;
+  basic: number;
+  source: string;
+};
+
+export type PremiumMultiYearObservation = {
+  id: string;
+  window_label: string;
+  tier: "gold" | "silver" | "bronze" | "basic";
+  cumulative_pct?: number;
+  by_fund?: Record<string, number>;
+  industry_avg_pct: number;
+  source: string;
+  note: string;
 };
 
 export type PremiumTierData = {
@@ -81,7 +99,9 @@ export type PremiumTierData = {
     sources: string[];
     notes: string;
   };
-  annual_increase_pct: PremiumAnnualRow[];
+  industry_average_pct: PremiumIndustryRow[];
+  tier_rounds: PremiumTierRound[];
+  multi_year_observations: PremiumMultiYearObservation[];
 };
 
 export type DashboardData = {

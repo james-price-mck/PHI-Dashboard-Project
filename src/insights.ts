@@ -176,6 +176,67 @@ export function computeNetNewByAgeGroup(
   return { rows, totalGrowth, under35SharePct };
 }
 
+/**
+ * Three broad age groups used by the YoY growth-in-covered-persons view
+ * (matches AgeCoverageChart display).
+ */
+export const AGE_YOY_GROUPS: { key: "u35" | "m35_64" | "o65"; label: string; bands: string[] }[] = [
+  {
+    key: "u35",
+    label: "Under 35",
+    bands: ["0-4", "5-9", "10-14", "15-19", "20-24", "25-29", "30-34"],
+  },
+  {
+    key: "m35_64",
+    label: "35–64",
+    bands: ["35-39", "40-44", "45-49", "50-54", "55-59", "60-64"],
+  },
+  {
+    key: "o65",
+    label: "65 and over",
+    bands: ["65-69", "70-74", "75-79", "80+"],
+  },
+];
+
+export type AgeYoyRow = {
+  quarter: string;
+  u35: number | null;
+  m35_64: number | null;
+  o65: number | null;
+};
+
+/**
+ * Trailing-4-quarter year-on-year percent change in insured persons per age group,
+ * returned as decimals (e.g. 0.021 = 2.1%). Earliest 4 quarters have nulls because
+ * the YoY baseline is unavailable.
+ */
+export function computeAgeYoyGrowthSeries(ageQuarters: AgeCoverageQuarter[]): AgeYoyRow[] {
+  const sorted = [...ageQuarters].sort((a, b) => a.quarter.localeCompare(b.quarter));
+  const sumInsured = (q: AgeCoverageQuarter, bands: string[]) => {
+    let s = 0;
+    for (const b of bands) {
+      const cell = q.bands[b];
+      if (cell) s += cell.insured_persons;
+    }
+    return s;
+  };
+  const out: AgeYoyRow[] = [];
+  for (let i = 0; i < sorted.length; i++) {
+    const q = sorted[i];
+    const prior = i >= 4 ? sorted[i - 4] : null;
+    const row: AgeYoyRow = { quarter: q.quarter, u35: null, m35_64: null, o65: null };
+    if (prior) {
+      for (const g of AGE_YOY_GROUPS) {
+        const now = sumInsured(q, g.bands);
+        const then = sumInsured(prior, g.bands);
+        row[g.key] = then > 0 ? (now - then) / then : null;
+      }
+    }
+    out.push(row);
+  }
+  return out;
+}
+
 export function computeExtrasVsHospitalPpDivergence(
   national: NationalQuarter[],
   baselineQuarter: string,
