@@ -27,15 +27,28 @@ type Row = {
 
 function normalizeShare(v: number | null): number | null {
   if (v == null) return null;
-  return v > 1 ? v / 100 : v;
+  const n = Number(v);
+  if (!Number.isFinite(n)) return null;
+  return n > 1 ? n / 100 : n;
 }
 
 function buildRows(data: NationalQuarter[]): Row[] {
   return data.map((d) => ({
+    // Prefer supplied share; fall back to insured/person denominator when share is absent.
     q: d.quarter,
     label: shortQuarterLabel(d.quarter),
-    hospital_rate: normalizeShare(d.hospital_treatment.share_of_population),
-    general_rate: normalizeShare(d.general_treatment.share_of_population),
+    hospital_rate:
+      normalizeShare(d.hospital_treatment.share_of_population) ??
+      (d.hospital_treatment.insured_persons != null &&
+      d.hospital_treatment.population_denominator
+        ? d.hospital_treatment.insured_persons / d.hospital_treatment.population_denominator
+        : null),
+    general_rate:
+      normalizeShare(d.general_treatment.share_of_population) ??
+      (d.general_treatment.insured_persons != null &&
+      d.general_treatment.population_denominator
+        ? d.general_treatment.insured_persons / d.general_treatment.population_denominator
+        : null),
     hospital_persons: d.hospital_treatment.insured_persons,
     general_persons: d.general_treatment.insured_persons,
   }));
@@ -134,6 +147,7 @@ export function CoverageCombinedChart({ data, compact }: Props) {
                 stroke="#2251ff"
                 dot={false}
                 strokeWidth={2.6}
+                connectNulls
                 isAnimationActive={false}
               />
               <Line
@@ -143,6 +157,7 @@ export function CoverageCombinedChart({ data, compact }: Props) {
                 stroke="#9e3c21"
                 dot={false}
                 strokeWidth={2.3}
+                connectNulls
                 isAnimationActive={false}
               />
             </>
@@ -155,6 +170,7 @@ export function CoverageCombinedChart({ data, compact }: Props) {
                 stroke="#2251ff"
                 dot={false}
                 strokeWidth={2.6}
+                connectNulls
                 isAnimationActive={false}
               />
               <Line
@@ -164,6 +180,7 @@ export function CoverageCombinedChart({ data, compact }: Props) {
                 stroke="#9e3c21"
                 dot={false}
                 strokeWidth={2.3}
+                connectNulls
                 isAnimationActive={false}
               />
             </>

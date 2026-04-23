@@ -8,7 +8,7 @@
   --bg: #ffffff;
   --grid: rgba(208, 214, 220, 0.35);
   --chart-amber: #3f67d8;
-  --chart-brick: #9e3c21;
+  --chart-brick: #c0002f;
   --chart-warm-grey: #7b868c;
   --font-serif: Georgia, "Times New Roman", serif;
   --font-sans: "Inter", system-ui, -apple-system, sans-serif;
@@ -124,10 +124,10 @@ a:hover {
 }
 
 .kpi-delta.up {
-  color: var(--chart-brick);
+  color: var(--accent-2);
 }
 .kpi-delta.down {
-  color: var(--accent-2);
+  color: var(--chart-brick);
 }
 
 section.insight-section {
