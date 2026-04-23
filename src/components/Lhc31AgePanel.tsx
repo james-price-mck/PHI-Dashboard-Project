@@ -9,7 +9,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { fmtInt, shortQuarterLabel } from "../format";
+import { shortQuarterLabel } from "../format";
 import {
   computeCoverageRateSeriesByBand,
   computeLhc31Shortfall,
@@ -127,6 +127,7 @@ export function Lhc31AgePanel({ ageQuarters, latestQuarter, baselineQuarter }: P
   const first = chartRows[0];
   const last = chartRows.at(-1);
   const baselineLabel = shortQuarterLabel(baselineQuarter);
+  const baselineYear = baselineLabel.slice(0, 4);
 
   function rangeLabel(then: number | null | undefined, now: number | null | undefined): string {
     if (then == null || now == null) return "—";
@@ -239,7 +240,7 @@ export function Lhc31AgePanel({ ageQuarters, latestQuarter, baselineQuarter }: P
               fontWeight: 700,
             }}
           >
-            Coverage rate since {baselineLabel}
+            Coverage rate since {baselineYear}
           </div>
           <StatCard
             label="25–29 (ABD eligible)"
@@ -253,42 +254,13 @@ export function Lhc31AgePanel({ ageQuarters, latestQuarter, baselineQuarter }: P
             deltaPp={row30_34?.coverageDeltaPp ?? null}
             valueColor="var(--mid-blue)"
           />
-          <div>
-            <div
-              style={{
-                fontSize: "0.7rem",
-                color: "var(--slate)",
-                textTransform: "uppercase",
-                letterSpacing: "0.06em",
-                fontWeight: 600,
-              }}
-            >
-              30–34 shortfall vs baseline rate
-            </div>
-            <div
-              style={{
-                fontSize: "1.2rem",
-                fontWeight: 600,
-                color: "var(--mid-blue)",
-                fontVariantNumeric: "tabular-nums",
-              }}
-            >
-              {row30_34?.shortfallPersons != null
-                ? `~${fmtInt(Math.round(row30_34.shortfallPersons / 1000) * 1000)} people`
-                : "—"}
-            </div>
-            <div style={{ fontSize: "0.75rem", color: "var(--slate)" }}>
-              30–34s missing from hospital cover if the {baselineLabel} rate had held.
-            </div>
-          </div>
         </div>
       </div>
       <p className="chart-source">
         Source: APRA Membership and Benefits (AgeCohort_HT); ABS Estimated Resident Population.
       </p>
       <p className="chart-source" style={{ marginTop: 4 }}>
-        Note: 35–39 is shown as a stable reference cohort. The 30–34 shortfall holds the
-        {" "}{baselineLabel} coverage rate constant against the latest 30–34 population.
+        Note: 35–39 is shown as a stable reference cohort.
       </p>
     </div>
   );

@@ -180,7 +180,7 @@ export function App() {
   return (
     <div className="app">
       <div className="headline-block">
-        <h1>Private health insurance coverage is growing, but consumers are downgrading coverage.</h1>
+        <h1>Private health insurance coverage is growing, but consumers are settling for less</h1>
         <p className="lead">
           More Australians than ever hold private health cover, but are downgrading from{" "}
           <strong>Gold</strong> to <strong>Silver</strong> and <strong>Bronze</strong> hospital
@@ -188,9 +188,6 @@ export function App() {
           <strong>1 April 2019 reforms</strong> reclassified every hospital product into four
           standard tiers — Gold, Silver, Bronze, Basic — with a 12-month transition before the
           tiers became <strong>mandatory on 1 April 2020</strong>.
-        </p>
-        <p className="muted" style={{ marginTop: 4 }}>
-          Sources: APRA, Department of Health, Disability and Ageing, ABS, and CHOICE.
         </p>
 
         <div className="kpi-group-header kpi-group-header--inverse">
@@ -298,6 +295,10 @@ export function App() {
           />
         </div>
 
+        <p className="muted" style={{ marginTop: 12 }}>
+          Sources: APRA, Department of Health, Disability and Ageing, ABS, and CHOICE.
+        </p>
+
       </div>
 
       <section className="insight-group" aria-labelledby="sec-group-growth">
@@ -328,12 +329,12 @@ export function App() {
                   <>
                     65-and-overs account for{" "}
                     <strong>{cohort65ShareOfDecisionNetNew.toFixed(0)}%</strong> of net new
-                    decision-age insured lives since {baselineLabel}, and have been the volume
+                    decision-age insured lives since {baselineYear}, and have been the volume
                     engine behind the overall rise in coverage.
                   </>
                 ) : (
                   <>
-                    Since {baselineLabel}, 65-and-overs have been the volume engine behind the
+                    Since {baselineYear}, 65-and-overs have been the volume engine behind the
                     overall rise in coverage.
                   </>
                 )}
@@ -356,7 +357,7 @@ export function App() {
                 tapering 2 pp per year from age 26) and the{" "}
                 <strong>Lifetime Health Cover loading</strong> (LHC — 2% per year of delayed
                 take-up from age 31, capped at 70%). Both contribute to the ~10-point gap
-                between 30–34 and 25–29 coverage today. But since the 2019 Q2 baseline, ABD has
+                between 30–34 and 25–29 coverage today. But since the 2019 baseline, ABD has
                 done more work than LHC: 25–29 coverage is up <strong>+3.8 pts</strong>, while
                 30–34 coverage has fallen <strong>−2.2 pts</strong>.
               </p>
@@ -393,7 +394,7 @@ export function App() {
             <p className="insight-sub" style={{ maxWidth: "none" }}>
               Bronze has absorbed most of the shift: its share of hospital cover has risen from{" "}
               <strong>{fmtPct(tierInsight.bronzeShareThen)}%</strong> to{" "}
-              <strong>{fmtPct(tierInsight.bronzeShareNow)}%</strong> since {baselineLabel}.
+              <strong>{fmtPct(tierInsight.bronzeShareNow)}%</strong> since {baselineYear}.
             </p>
           )}
           <div className="chart-panel chart-panel--tall">
@@ -414,13 +415,13 @@ export function App() {
             <>
               <p className="insight-sub" style={{ maxWidth: "none" }}>
                 In April 2025, Gold premiums across the big-five insurers rose{" "}
-                <strong>+{round2025?.gold != null ? round2025.gold.toFixed(1) : "—"}%</strong> —
+                <strong>+{round2025?.gold != null ? round2025.gold.toFixed(1) : "—"}%</strong>,
                 while Silver, Bronze and Basic each rose 3% or less, and the DoH industry-weighted
                 average was just{" "}
                 <strong>
                   +{round2025?.industry_avg_pct != null ? round2025.industry_avg_pct.toFixed(1) : "—"}%
                 </strong>
-                . Households are responding to price — trading out of Gold as the premium gap widens.
+                . Households are responding to price, trading out of Gold as the premium gap widens.
               </p>
               <div className="two-panel">
                 <PremiumRoundBarChart data={premium} />
@@ -443,7 +444,7 @@ export function App() {
         </section>
 
         <section className="insight-section" aria-labelledby="sec-extras-gap">
-          <span className="section-eyebrow">2C · Reinforces the pricing analysis</span>
+          <span className="section-eyebrow">2C · Extras coverage deep dive</span>
           <h3 id="sec-extras-gap" className="section-title">
             {extrasGapTitle}
           </h3>
@@ -472,7 +473,7 @@ export function App() {
           </h3>
           <p className="lead" style={{ maxWidth: "none" }}>
             Hospital cover rates have risen in parallel across states (typically 1 to 3
-            points of population since {baselineLabel}); ranking is little changed. Fastest lift:{" "}
+            points of population since {baselineYear}); ranking is little changed. Fastest lift:{" "}
             {topState ? jurisdictionDisplayName(topState.key) : "—"}; slowest:{" "}
             {bottomState ? jurisdictionDisplayName(bottomState.key) : "—"}. Differences are modest
             compared with the national tier down-shift.
@@ -501,7 +502,7 @@ export function App() {
           <p className="lead" style={{ maxWidth: "none" }}>
             Basic hospital is, for many households, a tax product rather than a health product.
             That creates a rational floor of MLS-liable households buying Basic purely to avoid
-            the surcharge. Individuals with basic cover are up ~19% since {baselineLabel},
+            the surcharge. Individuals with basic cover are up ~19% since {baselineYear},
             outpacing the ~13% growth in total hospital cover and consistent with this floor
             hardening.
           </p>
@@ -534,7 +535,7 @@ export function App() {
           <p>
             <strong>APRA Membership Trends:</strong> {data.meta.source_file}.{" "}
             <strong>Build:</strong> {data.meta.etl_build_time_utc}. Series start{" "}
-            <strong>{shortQuarterLabel(data.meta.series_start_iso)}</strong>.
+            <strong>{shortQuarterLabel(data.meta.series_start_iso).slice(0, 4)}</strong>.
           </p>
           <p>{data.meta.hospital_vs_general_note}</p>
           <p>{data.meta.pop_denominator_note}</p>
@@ -590,8 +591,8 @@ export function App() {
           )}
           <p>
             <strong>Elasticity caveat:</strong> the price elasticity of Gold hospital demand shown
-            above is a back-of-envelope partial correlation (ΔQ% ÷ ΔP%) over the {baselineLabel} →
-            latest window, using the CHOICE 5-year Gold premium observation and Gold
+            above is a back-of-envelope partial correlation (ΔQ% ÷ ΔP%) over the {baselineYear}
+            → latest window, using the CHOICE 5-year Gold premium observation and Gold
             insured-persons from APRA/DoH. It is <em>not</em> a causal identification —
             confounded by the 2019 tier-reform tail, COVID, demographic shift, and within-Gold
             product mix. The revenue-index statement assumes a flat &quot;premium index&quot; per

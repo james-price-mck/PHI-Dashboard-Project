@@ -1,6 +1,5 @@
 import { useMemo } from "react";
 import {
-  Area,
   CartesianGrid,
   ComposedChart,
   Label,
@@ -51,7 +50,6 @@ export function MlsTaxFloorChart({ policy, tierSeries }: Props) {
         income: r.income,
         mlsAud: r.mlsAud,
         basicAud: basic,
-        savingsIfBasic: Math.max(0, r.mlsAud - basic),
       })),
     [singles, basic],
   );
@@ -125,17 +123,6 @@ export function MlsTaxFloorChart({ policy, tierSeries }: Props) {
                   if (typeof val !== "number" || !Number.isFinite(val)) return ["—", name];
                   return [formatAud(val), name];
                 }}
-              />
-              <Area
-                type="stepAfter"
-                dataKey="savingsIfBasic"
-                name="Saved by holding Basic"
-                stroke="none"
-                fill="var(--sky)"
-                fillOpacity={0.1}
-                isAnimationActive={false}
-                legendType="none"
-                activeDot={false}
               />
               <Line
                 type="stepAfter"
@@ -266,7 +253,7 @@ export function MlsTaxFloorChart({ policy, tierSeries }: Props) {
             </div>
             <div style={{ fontSize: "0.75rem", color: "var(--slate)" }}>
               {basicGrowth.pctChange != null
-                ? `${basicGrowth.pctChange >= 0 ? "+" : ""}${basicGrowth.pctChange.toFixed(0)}% since 2020 Q2`
+                ? `${basicGrowth.pctChange >= 0 ? "+" : ""}${basicGrowth.pctChange.toFixed(0)}% since 2020`
                 : ""}
               {basicGrowth.totalPctChange != null
                 ? ` · total hospital cover ${basicGrowth.totalPctChange >= 0 ? "+" : ""}${basicGrowth.totalPctChange.toFixed(0)}%`

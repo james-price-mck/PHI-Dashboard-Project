@@ -47,7 +47,7 @@ export function ExtrasVsHospitalGapChart({ national }: Props) {
     <div
       className="chart-panel chart-panel--tall"
       role="img"
-      aria-label={`Cumulative percentage-point change in hospital and extras coverage share since ${baselineLabel}. Extras outpaces hospital.`}
+      aria-label={`Cumulative percentage-point change in hospital and extras coverage share since ${baselineLabel.slice(0, 4)}. Extras outpaces hospital.`}
     >
       <div className="chart-toolbar-row">
         <span className="chart-title">

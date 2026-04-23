@@ -43,7 +43,7 @@ export function TierGoldShareChart({
     <div
       className="chart-panel"
       role="img"
-      aria-label={`Gold share of hospital cover from ${baselineLabel} onward.`}
+      aria-label={`Gold share of hospital cover from ${baselineLabel.slice(0, 4)} onward.`}
     >
       <div className="chart-toolbar-row">
         <span className="chart-title">

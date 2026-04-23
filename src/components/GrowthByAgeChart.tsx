@@ -131,7 +131,7 @@ export function GrowthByAgeChart({ rows, baselineQuarter, latestQuarter }: Props
     <div
       className="chart-panel"
       role="img"
-      aria-label={`Change in hospital-cover coverage rate by age cohort, ${baselineLabel} to ${latestLabel}. Bar length is change in percentage points of the cohort's population; bar thickness is the cohort's share of the 25-plus adult population. 30–34 and 60–64 are the only decision-age cohorts whose coverage rate has fallen.`}
+      aria-label={`Change in hospital-cover coverage rate by age cohort, ${baselineLabel.slice(0, 4)} to ${latestLabel.slice(0, 4)}. Bar length is change in percentage points of the cohort's population; bar thickness is the cohort's share of the 25-plus adult population. 30–34 and 60–64 are the only decision-age cohorts whose coverage rate has fallen.`}
     >
       <div className="chart-toolbar-row">
         <span className="chart-title">
@@ -231,7 +231,7 @@ export function GrowthByAgeChart({ rows, baselineQuarter, latestQuarter }: Props
               fontWeight: 700,
             }}
           >
-            Net new insured lives since {baselineLabel}
+            Net new insured lives since {baselineYear}
           </div>
           {chartData.map((r) => (
             <div

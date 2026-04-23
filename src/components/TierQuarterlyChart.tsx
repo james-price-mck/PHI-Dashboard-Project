@@ -257,7 +257,7 @@ export function TierQuarterlyChart({ data }: Props) {
       </p>
       <p className="chart-source" style={{ marginTop: 4 }}>
         Note: Legacy is the pre-reform product set tapering to zero over 2019–2020; the stable
-        mix reads cleanly from 2020 Q2 onward.
+        mix reads cleanly from 2020 onward.
       </p>
     </div>
   );
