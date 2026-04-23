@@ -51,7 +51,7 @@ export function ExtrasVsHospitalGapChart({ national }: Props) {
     >
       <div className="chart-toolbar-row">
         <span className="chart-title">
-          Cumulative pp Δ in coverage share since {baselineLabel}
+          Change in coverage share since {baselineLabel} (points of population)
         </span>
         {first && last && (
           <span className="chart-daterange">
@@ -70,7 +70,7 @@ export function ExtrasVsHospitalGapChart({ national }: Props) {
                 minTickGap={24}
               />
               <YAxis
-                tickFormatter={(v: number) => `${v >= 0 ? "+" : ""}${v.toFixed(1)} pp`}
+                tickFormatter={(v: number) => `${v >= 0 ? "+" : ""}${v.toFixed(1)} pts`}
                 tick={{ fill: "var(--slate)", fontSize: 11 }}
                 width={54}
               />
@@ -85,7 +85,7 @@ export function ExtrasVsHospitalGapChart({ national }: Props) {
                 formatter={(val: number | string, name: string) => {
                   if (typeof val !== "number" || !Number.isFinite(val)) return ["—", name];
                   const s = val >= 0 ? "+" : "";
-                  return [`${s}${val.toFixed(2)} pp`, name];
+                  return [`${s}${val.toFixed(2)} pts`, name];
                 }}
               />
               <ReferenceLine
@@ -97,7 +97,7 @@ export function ExtrasVsHospitalGapChart({ national }: Props) {
               <Line
                 type="monotone"
                 dataKey="hospitalPp"
-                name="Hospital cover (pp Δ)"
+                name="Hospital cover (points of population)"
                 stroke="var(--mid-grey)"
                 strokeWidth={1.8}
                 strokeDasharray="6 4"
@@ -108,7 +108,7 @@ export function ExtrasVsHospitalGapChart({ national }: Props) {
               <Line
                 type="monotone"
                 dataKey="extrasPp"
-                name="Extras cover (pp Δ)"
+                name="Extras cover (points of population)"
                 stroke="var(--slate)"
                 strokeWidth={1.8}
                 dot={false}
@@ -170,7 +170,7 @@ export function ExtrasVsHospitalGapChart({ national }: Props) {
               }}
             >
               {last?.gapPp != null
-                ? `${last.gapPp >= 0 ? "+" : ""}${last.gapPp.toFixed(2)} pp`
+                ? `${last.gapPp >= 0 ? "+" : ""}${last.gapPp.toFixed(2)} pts`
                 : "—"}
             </div>
             <div style={{ fontSize: "0.75rem", color: "var(--slate)" }}>
@@ -187,7 +187,7 @@ export function ExtrasVsHospitalGapChart({ national }: Props) {
                 fontWeight: 600,
               }}
             >
-              Extras pp Δ
+              Extras, change since {baselineLabel}
             </div>
             <div
               style={{
@@ -198,7 +198,7 @@ export function ExtrasVsHospitalGapChart({ national }: Props) {
               }}
             >
               {last?.extrasPp != null
-                ? `${last.extrasPp >= 0 ? "+" : ""}${last.extrasPp.toFixed(2)} pp`
+                ? `${last.extrasPp >= 0 ? "+" : ""}${last.extrasPp.toFixed(2)} pts`
                 : "—"}
             </div>
           </div>
@@ -212,7 +212,7 @@ export function ExtrasVsHospitalGapChart({ national }: Props) {
                 fontWeight: 600,
               }}
             >
-              Hospital pp Δ
+              Hospital, change since {baselineLabel}
             </div>
             <div
               style={{
@@ -223,7 +223,7 @@ export function ExtrasVsHospitalGapChart({ national }: Props) {
               }}
             >
               {last?.hospitalPp != null
-                ? `${last.hospitalPp >= 0 ? "+" : ""}${last.hospitalPp.toFixed(2)} pp`
+                ? `${last.hospitalPp >= 0 ? "+" : ""}${last.hospitalPp.toFixed(2)} pts`
                 : "—"}
             </div>
           </div>

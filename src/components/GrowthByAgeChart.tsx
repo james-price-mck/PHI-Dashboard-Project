@@ -31,7 +31,7 @@ type Props = {
 function fmtSignedPp(v: number | null | undefined, dp = 1): string {
   if (v == null || !Number.isFinite(v)) return "—";
   const s = v >= 0 ? "+" : "";
-  return `${s}${v.toFixed(dp)} pp`;
+  return `${s}${v.toFixed(dp)} pts`;
 }
 
 function fmtSharePct(v: number | null | undefined, dp = 0): string {
@@ -68,7 +68,7 @@ export function GrowthByAgeChart({ rows }: Props) {
     >
       <div className="chart-toolbar-row">
         <span className="chart-title">
-          Share of net growth vs share of adult (25+) population, in percentage points
+          Share of net growth minus share of adult (25+) population, in points
         </span>
       </div>
       <ResponsiveContainer width="100%" height={280}>
@@ -81,7 +81,7 @@ export function GrowthByAgeChart({ rows }: Props) {
           <XAxis
             type="number"
             domain={[-padded, padded]}
-            tickFormatter={(v: number) => `${v > 0 ? "+" : ""}${v} pp`}
+            tickFormatter={(v: number) => `${v > 0 ? "+" : ""}${v} pts`}
             tick={{ fill: "var(--slate)", fontSize: 11 }}
           />
           <YAxis

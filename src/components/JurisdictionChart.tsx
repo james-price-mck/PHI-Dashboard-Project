@@ -72,7 +72,7 @@ export function JurisdictionChart({
             : null;
         const title = `${jurisdictionDisplayName(key)} · ${
           shareNow != null ? fmtPct(shareNow) : "—"
-        }% · ${dpp != null ? `${dpp >= 0 ? "+" : ""}${dpp.toFixed(1)} pp` : "—"} since ${shortQuarterLabel(baselineQuarter)}`;
+        }% · ${dpp != null ? `${dpp >= 0 ? "+" : ""}${dpp.toFixed(1)} pts` : "—"} since ${shortQuarterLabel(baselineQuarter)}`;
 
         return (
           <div key={key} className="jurisdiction-cell">

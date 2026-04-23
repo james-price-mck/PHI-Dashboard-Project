@@ -3,6 +3,19 @@ export function fmtInt(n: number | null | undefined): string {
   return n.toLocaleString("en-AU", { maximumFractionDigits: 0 });
 }
 
+/**
+ * Compact signed count (e.g. +1.49M, −842k, +980) for tight KPI captions.
+ * Uses 2 decimals for millions, 0 for thousands, raw for < 1,000.
+ */
+export function fmtCompactSigned(n: number | null | undefined): string {
+  if (n == null || Number.isNaN(n)) return "—";
+  const sign = n > 0 ? "+" : n < 0 ? "\u2212" : "";
+  const abs = Math.abs(n);
+  if (abs >= 1_000_000) return `${sign}${(abs / 1_000_000).toFixed(2)}M`;
+  if (abs >= 1_000) return `${sign}${Math.round(abs / 1_000)}k`;
+  return `${sign}${abs.toLocaleString("en-AU", { maximumFractionDigits: 0 })}`;
+}
+
 export function fmtPct(share: number | null | undefined): string {
   if (share == null || Number.isNaN(share)) return "—";
   return (share * 100).toLocaleString("en-AU", {

@@ -201,7 +201,7 @@ export function Lhc31AgePanel({ ageQuarters, latestQuarter, baselineQuarter }: P
             </div>
             <div style={{ fontSize: "0.75rem", color: "var(--slate)" }}>
               {row30_34?.coverageDeltaPp != null
-                ? `${row30_34.coverageDeltaPp >= 0 ? "+" : ""}${row30_34.coverageDeltaPp.toFixed(1)} pp since ${baselineLabel}`
+                ? `${row30_34.coverageDeltaPp >= 0 ? "+" : ""}${row30_34.coverageDeltaPp.toFixed(1)} pts since ${baselineLabel}`
                 : ""}
             </div>
           </div>

@@ -11,7 +11,14 @@ import { MlsTaxFloorChart } from "./components/MlsTaxFloorChart";
 import { PremiumRoundBarChart } from "./components/PremiumRoundBarChart";
 import { TierGoldShareChart } from "./components/TierGoldShareChart";
 import { TierQuarterlyChart } from "./components/TierQuarterlyChart";
-import { fmtFinancialYear, fmtInt, fmtPct, jurisdictionDisplayName, shortQuarterLabel } from "./format";
+import {
+  fmtCompactSigned,
+  fmtFinancialYear,
+  fmtInt,
+  fmtPct,
+  jurisdictionDisplayName,
+  shortQuarterLabel,
+} from "./format";
 import {
   BASELINE_QUARTER,
   computeExtrasVsHospitalPpDivergence,
@@ -82,6 +89,7 @@ export function App() {
   const latestQ = data.national_quarterly.at(-1)?.quarter ?? "";
   const quarterLabel = data.meta.data_as_of ? shortQuarterLabel(data.meta.data_as_of) : "—";
   const baselineLabel = shortQuarterLabel(BASELINE_QUARTER);
+  const baselineYear = baselineLabel.slice(0, 4);
 
   const natThen = getNationalAtQuarter(data.national_quarterly, BASELINE_QUARTER);
   const natNow = getNationalAtQuarter(data.national_quarterly, latestQ);
@@ -131,13 +139,18 @@ export function App() {
 
   // Action-title copy is computed from live data so it stays accurate after each refresh.
   const growthTitle =
-    hPp != null && ePp != null
-      ? `Hospital and extras have both kept climbing since the 2019 reforms — hospital up ${hPp >= 0 ? "+" : ""}${hPp.toFixed(1)} pp and extras up ${ePp >= 0 ? "+" : ""}${ePp.toFixed(1)} pp of population since ${baselineLabel}.`
-      : "Hospital and extras have both kept climbing since the 2019 reforms; both now sit above pre-reform levels.";
+    natThen?.hospitalShare != null &&
+    natNow?.hospitalShare != null &&
+    natThen?.extrasShare != null &&
+    natNow?.extrasShare != null
+      ? `Coverage has kept climbing since the 2019 reforms — hospital cover has grown from ${fmtPct(natThen.hospitalShare)}% to ${fmtPct(natNow.hospitalShare)}% of the population, and extras from ${fmtPct(natThen.extrasShare)}% to ${fmtPct(natNow.extrasShare)}%.`
+      : "Coverage has kept climbing since the 2019 reforms; hospital and extras both sit above pre-reform levels.";
 
   const tradeDownTitle =
-    tierInsight.goldDeltaPp != null && tierInsight.silverBronzeDeltaPp != null
-      ? `The market is trading down: Gold has lost ${Math.abs(tierInsight.goldDeltaPp).toFixed(1)} pp of hospital share to Silver and Bronze since ${baselineLabel}.`
+    tierInsight.goldShareThen != null &&
+    tierInsight.goldShareNow != null &&
+    tierInsight.goldDeltaPp != null
+      ? `The market is trading down: Gold's share of hospital cover has fallen from ${fmtPct(tierInsight.goldShareThen)}% to ${fmtPct(tierInsight.goldShareNow)}% since ${baselineLabel}, with Silver and Bronze absorbing the shift.`
       : `The market is trading down from Gold toward Silver and Bronze since ${baselineLabel}.`;
 
   // Risk-pool framing for 1B: 65+ are carrying almost all net growth while being
@@ -146,12 +159,12 @@ export function App() {
   // cross-tabulated by age, so any tier × age link is inferred, not measured).
   const over65Row = ageGrowthRows.find((r) => r.label === "65 and over") ?? null;
   const growthDriverTitle =
-    over65Row?.overIndexPp != null &&
     over65Row?.growthSharePct != null &&
     over65Row?.populationSharePct != null &&
-    young25_34?.overIndexPp != null
-      ? `The book is ageing — 65-and-overs account for ${over65Row.growthSharePct.toFixed(0)}% of net new insured lives while being only ${over65Row.populationSharePct.toFixed(0)}% of adults (${over65Row.overIndexPp >= 0 ? "+" : ""}${over65Row.overIndexPp.toFixed(1)} pp over-index), and 25–34s are under-indexed by ${Math.abs(young25_34.overIndexPp).toFixed(1)} pp. The risk pool is skewing older, independent of the tier shift.`
-      : "The book is ageing — 65-and-overs are doing almost all the net growth in hospital cover; younger decision-makers are under-indexed. The risk pool is skewing older, independent of the tier shift.";
+    young25_34?.growthSharePct != null &&
+    young25_34?.populationSharePct != null
+      ? `The book is ageing — 65-and-overs are ${over65Row.populationSharePct.toFixed(0)}% of adults but ${over65Row.growthSharePct.toFixed(0)}% of net new insured lives, while 25–34s are ${young25_34.populationSharePct.toFixed(0)}% of adults and just ${young25_34.growthSharePct.toFixed(0)}% of net new. The risk pool is skewing older, independent of the tier shift.`
+      : "The book is ageing — 65-and-overs are doing almost all the net growth in hospital cover; younger decision-makers are under-represented. The risk pool is skewing older, independent of the tier shift.";
 
   const lhcObservationTitle =
     "The Lifetime Health Cover loading isn't biting on the cohort it's aimed at — 30–34 coverage has fallen since baseline, even though the loading activates from age 31.";
@@ -160,7 +173,7 @@ export function App() {
     goldFiveYear?.cumulative_pct != null &&
     goldFiveYear?.industry_avg_pct != null &&
     tierInsight.goldDeltaPp != null
-      ? `Gold premiums outpacing the industry average by ${(goldFiveYear.cumulative_pct - goldFiveYear.industry_avg_pct).toFixed(0)} pp over five years appears to be driving the ${Math.abs(tierInsight.goldDeltaPp).toFixed(1)} pp drop in Gold's share of hospital cover.`
+      ? `Gold premiums have outpaced the industry average by ${(goldFiveYear.cumulative_pct - goldFiveYear.industry_avg_pct).toFixed(0)} percentage points over five years, and Gold's share of hospital cover has fallen ${Math.abs(tierInsight.goldDeltaPp).toFixed(1)} points in response.`
       : "Above-market Gold premium increases appear to be driving the decline in Gold's share of hospital cover.";
 
   const mlsTitle =
@@ -168,7 +181,7 @@ export function App() {
 
   const extrasGapTitle =
     extrasVsH.diffPp != null
-      ? `Affordability pressure reinforces the trade-down: extras has outpaced hospital by ${extrasVsH.diffPp.toFixed(1)} pp of population since ${baselineLabel} as households keep cheap, visible benefits and trim expensive hospital tiers.`
+      ? `Affordability pressure reinforces the trade-down: extras coverage has grown ${extrasVsH.diffPp.toFixed(1)} points of population faster than hospital since ${baselineLabel} as households keep cheap, visible benefits and trim expensive hospital tiers.`
       : `Affordability pressure reinforces the trade-down: households are keeping extras and trimming hospital since ${baselineLabel}.`;
 
   const appendixTitle =
@@ -177,12 +190,11 @@ export function App() {
   return (
     <div className="app">
       <div className="headline-block">
-        <h1>Private health insurance coverage is growing, but consumers are choosing lower tiers.</h1>
+        <h1>Private health insurance coverage is growing, but consumers are downgrading coverage tier.</h1>
         <p className="lead">
-          More Australians than ever hold private health cover — but within hospital cover,
-          households are shifting from <span className="emph-ink">Gold</span> to{" "}
-          <span className="emph-ink">Silver and Bronze tiers</span> as premium gaps widen and the
-          Medicare Levy Surcharge pulls price-sensitive buyers into Basic.
+          More Australians than ever hold private health cover, but are downgrading from{" "}
+          <strong>Gold</strong> to <strong>Silver</strong> and <strong>Bronze</strong> hospital
+          cover as premium gaps widen and affordability concerns grow.
         </p>
         <p className="muted" style={{ marginTop: 4 }}>
           Sources: APRA, Department of Health, Disability and Ageing, ABS, and CHOICE.
@@ -198,13 +210,16 @@ export function App() {
             value={natNow?.hospitalPersons != null ? fmtInt(natNow.hospitalPersons) : "—"}
             sub={
               natNow?.hospitalShare != null
-                ? `${fmtPct(natNow.hospitalShare)}% of population`
+                ? natThen?.hospitalShare != null
+                  ? `${fmtPct(natThen.hospitalShare)}% \u2192 ${fmtPct(natNow.hospitalShare)}% of population`
+                  : `${fmtPct(natNow.hospitalShare)}% of population`
                 : undefined
             }
+            subPlacement="above-delta"
             delta={
-              hDelta != null && hPp != null
+              hDelta != null
                 ? {
-                    text: `${hDelta >= 0 ? "+" : ""}${fmtInt(hDelta)} vs ${baselineLabel} (${hPct != null ? `${hPct >= 0 ? "+" : ""}${hPct.toFixed(0)}%` : "—"}; ${hPp >= 0 ? "+" : ""}${hPp.toFixed(1)} pp)`,
+                    text: `${fmtCompactSigned(hDelta)} (${hPct != null ? `${hPct >= 0 ? "+" : ""}${hPct.toFixed(0)}%` : "—"}) since ${baselineYear}`,
                     direction: hDelta >= 0 ? "up" : "down",
                   }
                 : undefined
@@ -215,13 +230,16 @@ export function App() {
             value={natNow?.extrasPersons != null ? fmtInt(natNow.extrasPersons) : "—"}
             sub={
               natNow?.extrasShare != null
-                ? `${fmtPct(natNow.extrasShare)}% of population`
+                ? natThen?.extrasShare != null
+                  ? `${fmtPct(natThen.extrasShare)}% \u2192 ${fmtPct(natNow.extrasShare)}% of population`
+                  : `${fmtPct(natNow.extrasShare)}% of population`
                 : undefined
             }
+            subPlacement="above-delta"
             delta={
-              eDelta != null && ePp != null
+              eDelta != null
                 ? {
-                    text: `${eDelta >= 0 ? "+" : ""}${fmtInt(eDelta)} vs ${baselineLabel} (${ePct != null ? `${ePct >= 0 ? "+" : ""}${ePct.toFixed(0)}%` : "—"}; ${ePp >= 0 ? "+" : ""}${ePp.toFixed(1)} pp)`,
+                    text: `${fmtCompactSigned(eDelta)} (${ePct != null ? `${ePct >= 0 ? "+" : ""}${ePct.toFixed(0)}%` : "—"}) since ${baselineYear}`,
                     direction: eDelta >= 0 ? "up" : "down",
                   }
                 : undefined
@@ -229,12 +247,18 @@ export function App() {
           />
           <KpiTile
             variant="tier"
-            label="Gold — share of hospital cover"
+            label="Gold share of cover"
             value={goldShareLatest != null ? `${fmtPct(goldShareLatest)}%` : "—"}
+            sub={
+              tierInsight.goldShareThen != null && tierInsight.goldShareNow != null
+                ? `${fmtPct(tierInsight.goldShareThen)}% \u2192 ${fmtPct(tierInsight.goldShareNow)}% of hospital cover`
+                : undefined
+            }
+            subPlacement="above-delta"
             delta={
               tierInsight.goldDeltaPp != null
                 ? {
-                    text: `${tierInsight.goldDeltaPp >= 0 ? "+" : ""}${tierInsight.goldDeltaPp.toFixed(1)} pp vs ${baselineLabel}`,
+                    text: `${tierInsight.goldDeltaPp >= 0 ? "+" : ""}${tierInsight.goldDeltaPp.toFixed(1)} points since ${baselineYear}`,
                     direction: tierInsight.goldDeltaPp <= 0 ? "down" : "up",
                   }
                 : undefined
@@ -242,16 +266,22 @@ export function App() {
           />
           <KpiTile
             variant="tier"
-            label="Silver + Bronze — combined share"
+            label="Silver + Bronze share of cover"
             value={
               tierInsight.silverBronzeShareNow != null
                 ? `${fmtPct(tierInsight.silverBronzeShareNow)}%`
                 : "—"
             }
+            sub={
+              tierInsight.silverBronzeShareThen != null && tierInsight.silverBronzeShareNow != null
+                ? `${fmtPct(tierInsight.silverBronzeShareThen)}% \u2192 ${fmtPct(tierInsight.silverBronzeShareNow)}% of hospital cover`
+                : undefined
+            }
+            subPlacement="above-delta"
             delta={
               tierInsight.silverBronzeDeltaPp != null
                 ? {
-                    text: `${tierInsight.silverBronzeDeltaPp >= 0 ? "+" : ""}${tierInsight.silverBronzeDeltaPp.toFixed(1)} pp vs ${baselineLabel}`,
+                    text: `${tierInsight.silverBronzeDeltaPp >= 0 ? "+" : ""}${tierInsight.silverBronzeDeltaPp.toFixed(1)} points since ${baselineYear}`,
                     direction: tierInsight.silverBronzeDeltaPp >= 0 ? "up" : "down",
                   }
                 : undefined
@@ -261,115 +291,141 @@ export function App() {
 
       </div>
 
-      <section className="insight-section" aria-labelledby="sec-growth">
-        <span className="section-eyebrow">1A · Growth</span>
-        <h2 id="sec-growth" className="section-title">
-          {growthTitle}
+      <section className="insight-group" aria-labelledby="sec-group-growth">
+        <span className="section-eyebrow">1 · Growth</span>
+        <h2 id="sec-group-growth" className="group-title">
+          Coverage is growing, led by older cohorts
         </h2>
-        <p className="lead">
-          Tracking since {shortQuarterLabel(data.meta.series_start_iso)}, through the 1 April 2019
-          Gold/Silver/Bronze/Basic tier reforms and their mandatory adoption on 1 April 2020.
+        <p className="group-lead">
+          The insured population keeps expanding, but almost all of the net growth is coming from
+          65-and-overs. The book is ageing independently of the tier trade-down explored in
+          section 2.
         </p>
-        <CoverageCombinedChart data={data.national_quarterly} />
-      </section>
 
-      {ageQuartersAll.length > 0 && (
-        <section className="insight-section" aria-labelledby="sec-growth-driver">
-          <span className="section-eyebrow">1B · Growth driver</span>
-          <h2 id="sec-growth-driver" className="section-title">
-            {growthDriverTitle}
-          </h2>
-          <p className="insight-sub">
-            Almost all net growth in hospital cover since {baselineLabel} is concentrated in the
-            65-and-over cohort — consistent with an ageing population flowing into retirement and
-            retaining cover for chronic care and Lifetime Health Cover lock-in. 25–34
-            decision-makers, the cohort the Age-Based Discount and LHC loading are designed to
-            activate, contribute a smaller share of net growth than their share of adults would
-            suggest. This is a risk-pool observation; any link to the Gold-to-Silver/Bronze
-            trade-down in section 2A is not measurable with the data shown here (see Data
-            &amp; methods).
+        <section className="insight-section" aria-labelledby="sec-growth">
+          <span className="section-eyebrow">1A · Growth</span>
+          <h3 id="sec-growth" className="section-title">
+            {growthTitle}
+          </h3>
+          <p className="lead">
+            Tracking since {shortQuarterLabel(data.meta.series_start_iso)}, through the 1 April
+            2019 Gold/Silver/Bronze/Basic tier reforms and their mandatory adoption on 1 April
+            2020.
           </p>
-          <GrowthByAgeChart rows={ageGrowthRows} />
-          <p className="insight-sub" style={{ marginTop: "var(--s-5)" }}>
-            The over-time view confirms the snapshot: 65+ has grown near 3% YoY throughout,
-            while 25–34 was contracting at the baseline and has only recently caught up to the
-            middle cohorts.
-          </p>
-          <AgeCoverageChart data={ageQuartersAll} />
+          <CoverageCombinedChart data={data.national_quarterly} />
         </section>
-      )}
 
-      <section className="insight-section" aria-labelledby="sec-tier">
-        <span className="section-eyebrow">2A · Market trade-down</span>
-        <h2 id="sec-tier" className="section-title">
-          {tradeDownTitle}
-        </h2>
-        {tierInsight.bronzeShareThen != null && tierInsight.bronzeShareNow != null && (
-          <p className="insight-sub">
-            Bronze has absorbed most of the shift: its share of hospital cover has risen from{" "}
-            <strong>{fmtPct(tierInsight.bronzeShareThen)}%</strong> to{" "}
-            <strong>{fmtPct(tierInsight.bronzeShareNow)}%</strong> since {baselineLabel}.
-          </p>
-        )}
-        <div className="chart-panel chart-panel--tall">
-          {tierSeries.length > 0 ? (
-            <TierQuarterlyChart data={tierSeries} />
-          ) : (
-            <p className="muted">Tier series not present in this bundle.</p>
-          )}
-        </div>
-      </section>
-
-      <section className="insight-section" aria-labelledby="sec-premium">
-        <span className="section-eyebrow">2B · Premium divergence is the driver</span>
-        <h2 id="sec-premium" className="section-title">
-          {goldDivergenceTitle}
-        </h2>
-        {premium ? (
-          <>
+        {ageQuartersAll.length > 0 && (
+          <section className="insight-section" aria-labelledby="sec-growth-driver">
+            <span className="section-eyebrow">1B · Growth driver</span>
+            <h3 id="sec-growth-driver" className="section-title">
+              {growthDriverTitle}
+            </h3>
             <p className="insight-sub">
-              In the April 2025 round alone, Gold premiums across the big-five insurers rose{" "}
-              <strong>+{round2025?.gold != null ? round2025.gold.toFixed(1) : "—"}%</strong> —
-              while Silver, Bronze and Basic each rose 3% or less, and the DoH industry-weighted
-              average was just{" "}
-              <strong>
-                +{round2025?.industry_avg_pct != null ? round2025.industry_avg_pct.toFixed(1) : "—"}%
-              </strong>
-              . Households are responding to price — trading out of Gold as the premium gap widens.
+              Almost all net growth in hospital cover since {baselineLabel} is concentrated in the
+              65-and-over cohort — consistent with an ageing population flowing into retirement and
+              retaining cover for chronic care and Lifetime Health Cover lock-in. 25–34
+              decision-makers, the cohort the Age-Based Discount and LHC loading are designed to
+              activate, contribute a smaller share of net growth than their share of adults would
+              suggest. This is a risk-pool observation; any link to the Gold-to-Silver/Bronze
+              trade-down in section 2A is not measurable with the data shown here (see Data
+              &amp; methods).
             </p>
-            <div className="two-panel">
-              <PremiumRoundBarChart data={premium} />
-              {tierSeries.length > 0 ? <TierGoldShareChart data={tierSeries} /> : null}
-            </div>
-            {elasticity.elasticity != null && (
-              <ElasticityCallout
-                elasticity={elasticity}
-                baselineLabel={baselineLabel}
-                latestLabel={quarterLabel}
-              />
-            )}
-          </>
-        ) : (
-          <p className="muted">
-            Premium-tier data isn&apos;t available in this build. Add{" "}
-            <code>public/data/premium_tiers.json</code> to show the per-round comparison.
-          </p>
+            <GrowthByAgeChart rows={ageGrowthRows} />
+            <p className="insight-sub" style={{ marginTop: "var(--s-5)" }}>
+              The over-time view confirms the snapshot: 65+ has grown near 3% YoY throughout,
+              while 25–34 was contracting at the baseline and has only recently caught up to the
+              middle cohorts.
+            </p>
+            <AgeCoverageChart data={ageQuartersAll} />
+          </section>
         )}
       </section>
 
-      <section className="insight-section" aria-labelledby="sec-extras-gap">
-        <span className="section-eyebrow">2C · Affordability reinforces the trade-down</span>
-        <h2 id="sec-extras-gap" className="section-title">
-          {extrasGapTitle}
+      <section className="insight-group" aria-labelledby="sec-group-tradedown">
+        <span className="section-eyebrow">2 · Trade-down</span>
+        <h2 id="sec-group-tradedown" className="group-title">
+          Households are downgrading hospital cover as premiums diverge
         </h2>
-        <p className="insight-sub">
-          Extras cost a fraction of hospital cover and deliver frequent, visible benefits (dental,
-          optical, physio). Under budget pressure, households protect those benefits and trim
-          their hospital tier — Gold to Silver or Bronze, or down to Basic for MLS reasons. This
-          is the behavioural side of the price story in section 2B: the same affordability
-          pressure that makes Gold premium rises bite is what keeps extras on the renewal.
+        <p className="group-lead">
+          Gold's share of hospital cover has fallen sharply while Silver and Bronze have
+          absorbed the shift. Above-market Gold premium rises are the proximate driver, and
+          broader affordability pressure reinforces the same behaviour.
         </p>
-        <ExtrasVsHospitalGapChart national={data.national_quarterly} />
+
+        <section className="insight-section" aria-labelledby="sec-tier">
+          <span className="section-eyebrow">2A · Market trade-down</span>
+          <h3 id="sec-tier" className="section-title">
+            {tradeDownTitle}
+          </h3>
+          {tierInsight.bronzeShareThen != null && tierInsight.bronzeShareNow != null && (
+            <p className="insight-sub">
+              Bronze has absorbed most of the shift: its share of hospital cover has risen from{" "}
+              <strong>{fmtPct(tierInsight.bronzeShareThen)}%</strong> to{" "}
+              <strong>{fmtPct(tierInsight.bronzeShareNow)}%</strong> since {baselineLabel}.
+            </p>
+          )}
+          <div className="chart-panel chart-panel--tall">
+            {tierSeries.length > 0 ? (
+              <TierQuarterlyChart data={tierSeries} />
+            ) : (
+              <p className="muted">Tier series not present in this bundle.</p>
+            )}
+          </div>
+        </section>
+
+        <section className="insight-section" aria-labelledby="sec-premium">
+          <span className="section-eyebrow">2B · Premium divergence is the driver</span>
+          <h3 id="sec-premium" className="section-title">
+            {goldDivergenceTitle}
+          </h3>
+          {premium ? (
+            <>
+              <p className="insight-sub">
+                In the April 2025 round alone, Gold premiums across the big-five insurers rose{" "}
+                <strong>+{round2025?.gold != null ? round2025.gold.toFixed(1) : "—"}%</strong> —
+                while Silver, Bronze and Basic each rose 3% or less, and the DoH industry-weighted
+                average was just{" "}
+                <strong>
+                  +{round2025?.industry_avg_pct != null ? round2025.industry_avg_pct.toFixed(1) : "—"}%
+                </strong>
+                . Households are responding to price — trading out of Gold as the premium gap widens.
+              </p>
+              <div className="two-panel">
+                <PremiumRoundBarChart data={premium} />
+                {tierSeries.length > 0 ? <TierGoldShareChart data={tierSeries} /> : null}
+              </div>
+              {elasticity.elasticity != null && (
+                <ElasticityCallout
+                  elasticity={elasticity}
+                  baselineLabel={baselineLabel}
+                  latestLabel={quarterLabel}
+                />
+              )}
+            </>
+          ) : (
+            <p className="muted">
+              Premium-tier data isn&apos;t available in this build. Add{" "}
+              <code>public/data/premium_tiers.json</code> to show the per-round comparison.
+            </p>
+          )}
+        </section>
+
+        <section className="insight-section" aria-labelledby="sec-extras-gap">
+          <span className="section-eyebrow">2C · Affordability reinforces the trade-down</span>
+          <h3 id="sec-extras-gap" className="section-title">
+            {extrasGapTitle}
+          </h3>
+          <p className="insight-sub">
+            Extras cost a fraction of hospital cover and deliver frequent, visible benefits
+            (dental, optical, physio). Under budget pressure, households protect those benefits
+            and trim their hospital tier — Gold to Silver or Bronze, or down to Basic for MLS
+            reasons. This is the behavioural side of the price story in section 2B: the same
+            affordability pressure that makes Gold premium rises bite is what keeps extras on the
+            renewal.
+          </p>
+          <ExtrasVsHospitalGapChart national={data.national_quarterly} />
+        </section>
       </section>
 
       <details className="methods">
@@ -478,8 +534,8 @@ export function App() {
             {appendixTitle}
           </h3>
           <p className="lead">
-            Hospital cover rates have risen in parallel across states (typically 1–3 pp since{" "}
-            {baselineLabel}); ranking is little changed. Fastest lift:{" "}
+            Hospital cover rates have risen in parallel across states (typically 1 to 3
+            points of population since {baselineLabel}); ranking is little changed. Fastest lift:{" "}
             {topState ? jurisdictionDisplayName(topState.key) : "—"}; slowest:{" "}
             {bottomState ? jurisdictionDisplayName(bottomState.key) : "—"}. Differences are modest
             compared with the national tier down-shift.
