@@ -184,7 +184,7 @@ export function App() {
   return (
     <div className="app">
       <div className="headline-block">
-        <h1>Private health cover is growing, but Australians are choosing less</h1>
+        <h1>Private health cover is growing, but Australians are settling for less</h1>
         <p className="lead">
           More Australians than ever hold private health cover, but many are downgrading from{" "}
           <strong>Gold</strong> to <strong>Silver</strong> or <strong>Bronze</strong> as premium
