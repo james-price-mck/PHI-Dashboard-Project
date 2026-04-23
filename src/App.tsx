@@ -163,7 +163,7 @@ export function App() {
       : "Australians 65 and over drive coverage growth.";
 
   const lhcObservationTitle =
-    "The Age-Based Discount is lifting young-adult coverage, but the Lifetime Health Cover loading is not.";
+    "Policy measures are lifting young-adult coverage, but the Age-Based Discount has been materially more effective than the Lifetime Health Cover loading.";
 
   const goldDivergenceTitle =
     goldFiveYear?.cumulative_pct != null && goldFiveYear?.industry_avg_pct != null
