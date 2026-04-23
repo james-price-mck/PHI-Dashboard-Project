@@ -206,7 +206,7 @@ export function App() {
             National trajectory — hospital cover and extras (do not sum the two series; overlap is
             material).
           </p>
-          <CoverageCombinedChart data={data.national_quarterly} compact />
+          <CoverageCombinedChart data={data.national_quarterly} />
         </div>
       </div>
 

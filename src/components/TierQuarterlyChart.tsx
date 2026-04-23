@@ -15,7 +15,7 @@ import { fmtPct, shortQuarterLabel } from "../format";
 import type { TierKey, TierQuarter } from "../types";
 
 const TIER_META: { key: TierKey; label: string; color: string }[] = [
-  { key: "gold", label: "Gold", color: "#afa96e" },
+  { key: "gold", label: "Gold", color: "#2251ff" },
   { key: "silver", label: "Silver", color: "#7b868c" },
   { key: "bronze", label: "Bronze", color: "#9e3c21" },
   { key: "basic", label: "Basic", color: "#051c2c" },

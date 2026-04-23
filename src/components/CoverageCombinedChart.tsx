@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   CartesianGrid,
   Legend,
@@ -25,12 +25,17 @@ type Row = {
   general_persons: number | null;
 };
 
+function normalizeShare(v: number | null): number | null {
+  if (v == null) return null;
+  return v > 1 ? v / 100 : v;
+}
+
 function buildRows(data: NationalQuarter[]): Row[] {
   return data.map((d) => ({
     q: d.quarter,
     label: shortQuarterLabel(d.quarter),
-    hospital_rate: d.hospital_treatment.share_of_population,
-    general_rate: d.general_treatment.share_of_population,
+    hospital_rate: normalizeShare(d.hospital_treatment.share_of_population),
+    general_rate: normalizeShare(d.general_treatment.share_of_population),
     hospital_persons: d.hospital_treatment.insured_persons,
     general_persons: d.general_treatment.insured_persons,
   }));
@@ -51,9 +56,9 @@ type Props = {
 
 export function CoverageCombinedChart({ data, compact }: Props) {
   const [mode, setMode] = useState<Mode>("share");
-  const rows = buildRows(data);
+  const rows = useMemo(() => buildRows(data), [data]);
   const refRow = rows.find((r) => r.q === METHODOLOGY_REF_QUARTER);
-  const height = compact ? 220 : 320;
+  const height = compact ? 240 : 320;
 
   return (
     <div
@@ -83,7 +88,7 @@ export function CoverageCombinedChart({ data, compact }: Props) {
         </div>
       </div>
       <ResponsiveContainer width="100%" height={height}>
-        <LineChart data={rows} margin={{ top: 8, right: 12, left: 4, bottom: compact ? 24 : 8 }}>
+        <LineChart data={rows} margin={{ top: 8, right: 16, left: 4, bottom: compact ? 24 : 8 }}>
           <CartesianGrid stroke="var(--grid)" vertical={false} />
           <XAxis
             dataKey="label"
@@ -98,8 +103,8 @@ export function CoverageCombinedChart({ data, compact }: Props) {
             <YAxis
               tickFormatter={(v) => `${(v * 100).toFixed(0)}%`}
               tick={{ fill: "var(--muted)", fontSize: 10 }}
-              domain={[0, 0.65]}
-              width={36}
+              domain={[0, 0.7]}
+              width={38}
             />
           ) : (
             <YAxis
@@ -126,18 +131,18 @@ export function CoverageCombinedChart({ data, compact }: Props) {
                 type="monotone"
                 dataKey="hospital_rate"
                 name="Hospital cover"
-                stroke="var(--accent)"
+                stroke="#2251ff"
                 dot={false}
-                strokeWidth={2}
+                strokeWidth={2.6}
                 isAnimationActive={false}
               />
               <Line
                 type="monotone"
                 dataKey="general_rate"
                 name="Extras cover"
-                stroke="var(--chart-warm-grey)"
+                stroke="#9e3c21"
                 dot={false}
-                strokeWidth={2}
+                strokeWidth={2.3}
                 isAnimationActive={false}
               />
             </>
@@ -147,18 +152,18 @@ export function CoverageCombinedChart({ data, compact }: Props) {
                 type="monotone"
                 dataKey="hospital_persons"
                 name="Hospital cover"
-                stroke="var(--accent)"
+                stroke="#2251ff"
                 dot={false}
-                strokeWidth={2}
+                strokeWidth={2.6}
                 isAnimationActive={false}
               />
               <Line
                 type="monotone"
                 dataKey="general_persons"
                 name="Extras cover"
-                stroke="var(--chart-warm-grey)"
+                stroke="#9e3c21"
                 dot={false}
-                strokeWidth={2}
+                strokeWidth={2.3}
                 isAnimationActive={false}
               />
             </>

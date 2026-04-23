@@ -118,7 +118,7 @@ export function PremiumIndexChart({ data }: Props) {
             type="monotone"
             dataKey="bronze"
             name="Bronze (est.)"
-            stroke="var(--chart-amber)"
+            stroke="var(--accent-2)"
             strokeWidth={1.5}
             strokeOpacity={0.7}
             dot={false}
