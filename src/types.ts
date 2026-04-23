@@ -66,6 +66,24 @@ export type TierReconciliation = {
   passed: boolean;
 };
 
+export type PremiumAnnualRow = {
+  effective: string;
+  industry_avg: number;
+  gold?: number | null;
+  silver?: number | null;
+  bronze?: number | null;
+  basic?: number | null;
+};
+
+export type PremiumTierData = {
+  meta: {
+    last_reviewed: string;
+    sources: string[];
+    notes: string;
+  };
+  annual_increase_pct: PremiumAnnualRow[];
+};
+
 export type DashboardData = {
   meta: {
     data_as_of: string | null;

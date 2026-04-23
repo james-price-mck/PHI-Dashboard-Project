@@ -1,0 +1,68 @@
+{
+  "meta": {
+    "last_reviewed": "2026-04-01",
+    "sources": [
+      "Australian Government Department of Health, Disability and Ageing — Average annual price changes in private health insurance premiums",
+      "CHOICE (Mar 2026) analysis of big-five insurers (Bupa, HCF, HBF, Medibank, NIB)"
+    ],
+    "notes": "Tier-level increases are not published by DoH in a machine-readable file. Per-tier series for 2025–2026 is sourced from CHOICE's analysis of big-five insurer filings. Industry-average line is the DoH-approved weighted industry average. Where tier fields are null, the chart uses the industry average for that year (dashed segment)."
+  },
+  "annual_increase_pct": [
+    {
+      "effective": "2020-04-01",
+      "industry_avg": 2.7,
+      "gold": null,
+      "silver": null,
+      "bronze": null,
+      "basic": null
+    },
+    {
+      "effective": "2021-04-01",
+      "industry_avg": 2.7,
+      "gold": null,
+      "silver": null,
+      "bronze": null,
+      "basic": null
+    },
+    {
+      "effective": "2022-04-01",
+      "industry_avg": 2.7,
+      "gold": null,
+      "silver": null,
+      "bronze": null,
+      "basic": null
+    },
+    {
+      "effective": "2023-04-01",
+      "industry_avg": 2.9,
+      "gold": null,
+      "silver": null,
+      "bronze": null,
+      "basic": null
+    },
+    {
+      "effective": "2024-04-01",
+      "industry_avg": 3.03,
+      "gold": null,
+      "silver": null,
+      "bronze": null,
+      "basic": null
+    },
+    {
+      "effective": "2025-04-01",
+      "industry_avg": 3.73,
+      "gold": 13.8,
+      "silver": 4.7,
+      "bronze": 1.5,
+      "basic": -0.6
+    },
+    {
+      "effective": "2026-04-01",
+      "industry_avg": 4.41,
+      "gold": 13.3,
+      "silver": 3.0,
+      "bronze": 3.0,
+      "basic": 3.0
+    }
+  ]
+}

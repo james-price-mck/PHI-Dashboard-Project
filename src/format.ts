@@ -23,3 +23,20 @@ export function shortQuarterLabel(iso: string): string {
 export function yyyymmdd(iso: string): string {
   return iso.slice(0, 10);
 }
+
+/** Expanded jurisdiction labels for readability (APRA column keys). */
+export const JURISDICTION_DISPLAY: Record<string, string> = {
+  NSW_ACT: "New South Wales & ACT",
+  VIC: "Victoria",
+  QLD: "Queensland",
+  SA_NT: "South Australia & NT",
+  WA: "Western Australia",
+  TAS: "Tasmania",
+  ACT: "Australian Capital Territory",
+  NT: "Northern Territory",
+  AUST: "Australia (national)",
+};
+
+export function jurisdictionDisplayName(key: string): string {
+  return JURISDICTION_DISPLAY[key] ?? key;
+}
