@@ -11,6 +11,7 @@ import {
 } from "recharts";
 import { fmtPct, shortQuarterLabel } from "../format";
 import type { AgeCoverageQuarter } from "../types";
+import { BASELINE_QUARTER } from "../insights";
 
 const THREE_GROUPS: { key: string; label: string; bands: string[]; color: string }[] = [
   {
@@ -31,7 +32,7 @@ const THREE_GROUPS: { key: string; label: string; bands: string[]; color: string
     key: "m35_64",
     label: "35–64",
     bands: ["35-39", "40-44", "45-49", "50-54", "55-59", "60-64"],
-    color: "var(--accent)",
+    color: "var(--ink)",
   },
   {
     key: "o65",
@@ -76,7 +77,7 @@ type Props = {
 
 export function AgeCoverageChart({ data }: Props) {
   const trend = useMemo(() => aggregateTrend(data), [data]);
-  const reformLabel = shortQuarterLabel("2019-04-01");
+  const baselineLabel = shortQuarterLabel(BASELINE_QUARTER);
   const last = trend.at(-1);
 
   return (
@@ -85,65 +86,98 @@ export function AgeCoverageChart({ data }: Props) {
       role="img"
       aria-label="Hospital cover rate by broad age group over time; under thirty five rises while older groups are flatter."
     >
-      <ResponsiveContainer width="100%" height={320}>
-        <LineChart data={trend} margin={{ top: 12, right: 16, left: 4, bottom: 8 }}>
-          <CartesianGrid stroke="var(--grid)" vertical={false} />
-          <XAxis dataKey="quarter" minTickGap={24} tick={{ fill: "var(--muted)", fontSize: 10 }} />
-          <YAxis
-            tickFormatter={(v: number) => `${(v * 100).toFixed(0)}%`}
-            domain={[0, 0.85]}
-            tick={{ fill: "var(--muted)", fontSize: 11 }}
-            width={44}
-          />
-          <Tooltip
-            contentStyle={tooltipStyle}
-            formatter={(v: number | string) => {
-              if (typeof v !== "number" || !Number.isFinite(v)) return ["—"];
-              return [`${(v * 100).toFixed(1)}%`];
+      <div style={{ display: "flex", gap: 12, alignItems: "stretch" }}>
+        <div style={{ flex: "1 1 auto", minWidth: 0, height: 320 }}>
+          <ResponsiveContainer width="100%" height={320}>
+            <LineChart data={trend} margin={{ top: 12, right: 12, left: 4, bottom: 8 }}>
+              <CartesianGrid stroke="var(--grid)" vertical={false} />
+              <XAxis dataKey="quarter" minTickGap={24} tick={{ fill: "var(--muted)", fontSize: 10 }} />
+              <YAxis
+                tickFormatter={(v: number) => `${(v * 100).toFixed(0)}%`}
+                domain={[0.3, 0.85]}
+                tick={{ fill: "var(--muted)", fontSize: 11 }}
+                width={44}
+              />
+              <Tooltip
+                contentStyle={tooltipStyle}
+                formatter={(v: number | string) => {
+                  if (typeof v !== "number" || !Number.isFinite(v)) return ["—"];
+                  return [`${(v * 100).toFixed(1)}%`];
+                }}
+              />
+              <ReferenceLine
+                x={baselineLabel}
+                stroke="var(--muted)"
+                strokeDasharray="3 3"
+                strokeOpacity={0.55}
+                label={{
+                  value: "Stable tier window from here",
+                  position: "insideTopLeft",
+                  fill: "var(--muted)",
+                  fontSize: 10,
+                }}
+              />
+              {THREE_GROUPS.map((g) => (
+                <Line
+                  key={g.key}
+                  type="monotone"
+                  dataKey={g.key}
+                  name={g.label}
+                  stroke={g.color}
+                  strokeWidth={2.5}
+                  dot={false}
+                  isAnimationActive={false}
+                />
+              ))}
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+        {last && (
+          <div
+            aria-hidden
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              gap: 8,
+              minWidth: 110,
+              paddingTop: 12,
+              paddingBottom: 8,
             }}
-          />
-          <ReferenceLine
-            x={reformLabel}
-            stroke="var(--chart-brick)"
-            strokeDasharray="4 4"
-            strokeOpacity={0.45}
-            label={{
-              value: "Tier reforms",
-              position: "insideTopLeft",
-              fill: "var(--muted)",
-              fontSize: 10,
-            }}
-          />
-          {THREE_GROUPS.map((g) => (
-            <Line
-              key={g.key}
-              type="monotone"
-              dataKey={g.key}
-              name={g.label}
-              stroke={g.color}
-              strokeWidth={2.5}
-              dot={false}
-              isAnimationActive={false}
-            />
-          ))}
-        </LineChart>
-      </ResponsiveContainer>
-      {last && (
-        <div className="tier-latest-row" aria-hidden>
-          <span>
-            <strong>Latest</strong> —{" "}
-            {THREE_GROUPS.map((g, i) => {
+          >
+            {THREE_GROUPS.map((g) => {
               const v = last[g.key];
+              const num = typeof v === "number" ? v : null;
               return (
-                <span key={g.key}>
-                  {i > 0 ? " · " : ""}
-                  {g.label} <strong>{v != null && typeof v === "number" ? `${fmtPct(v)}%` : "—"}</strong>
-                </span>
+                <div key={g.key} style={{ fontSize: 12, lineHeight: 1.2 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <span
+                      style={{
+                        width: 10,
+                        height: 10,
+                        background: g.color,
+                        borderRadius: 2,
+                        display: "inline-block",
+                        flex: "0 0 auto",
+                      }}
+                    />
+                    <span style={{ color: "var(--ink)", fontWeight: 600 }}>{g.label}</span>
+                  </div>
+                  <div
+                    style={{
+                      color: "var(--muted)",
+                      fontVariantNumeric: "tabular-nums",
+                      paddingLeft: 16,
+                    }}
+                  >
+                    {num != null ? `${fmtPct(num)}%` : "—"}
+                  </div>
+                </div>
               );
             })}
-          </span>
-        </div>
-      )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

@@ -11,7 +11,13 @@ import {
 import type { AgeGrowthRow } from "../insights";
 import { fmtInt } from "../format";
 
-const COLORS = ["var(--accent-2)", "var(--accent)", "var(--chart-warm-grey)", "#5a79da", "var(--chart-brick)"];
+const COLORS = [
+  "var(--accent-2)",
+  "var(--chart-blue-2)",
+  "var(--ink)",
+  "var(--chart-warm-grey)",
+  "var(--chart-brick)",
+];
 
 const tooltipStyle = {
   backgroundColor: "#fff",

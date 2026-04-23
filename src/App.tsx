@@ -8,7 +8,7 @@ import { KpiTile } from "./components/KpiTile";
 import { PremiumIndexChart, buildPremiumIndexSeries } from "./components/PremiumIndexChart";
 import { TierGoldShareChart } from "./components/TierGoldShareChart";
 import { TierQuarterlyChart } from "./components/TierQuarterlyChart";
-import { fmtInt, fmtPct, jurisdictionDisplayName, shortQuarterLabel, yyyymmdd } from "./format";
+import { fmtInt, fmtPct, jurisdictionDisplayName, shortQuarterLabel } from "./format";
 import {
   BASELINE_QUARTER,
   computeExtrasVsHospitalPpDivergence,
@@ -71,7 +71,6 @@ export function App() {
   }
 
   const latestQ = data.national_quarterly.at(-1)?.quarter ?? "";
-  const refDate = yyyymmdd(data.meta.data_as_of ?? "");
   const quarterLabel = data.meta.data_as_of ? shortQuarterLabel(data.meta.data_as_of) : "—";
 
   const natThen = getNationalAtQuarter(data.national_quarterly, BASELINE_QUARTER);
@@ -123,20 +122,21 @@ export function App() {
   return (
     <div className="app">
       <div className="headline-block">
-        <span className="badge">APRA · DoH reform tiers · ABS · premium index (curated)</span>
+        <span className="badge">Data as of {quarterLabel} · APRA · DoH · ABS</span>
         <h1>Private health cover in Australia: growing, but trading down</h1>
         <p className="lead">
-          More people hold hospital cover and extras than before the April 2019 tier reforms — but{" "}
-          <strong>Gold is shrinking as a share of the market</strong> while Silver and Bronze expand.
-          Data through <strong>{quarterLabel}</strong> ({refDate}).
+          <span className="emph-blue">More people</span> hold hospital cover and extras than before
+          the April 2019 tier reforms — but <span className="emph-red">Gold is shrinking</span>{" "}
+          as a share of the market while Silver and Bronze expand.
         </p>
         <p className="muted" style={{ marginTop: 4 }}>
-          Sources: APRA membership trends, Department of Health, Disability and Ageing tier data, ABS
-          population; premium index from DoH industry rounds and CHOICE (big-five) tier estimates (
+          APRA membership trends, Department of Health, Disability and Ageing tier data, ABS
+          population. Premium index from DoH industry rounds and CHOICE big-five tier estimates (
           <code>public/data/premium_tiers.json</code>).
         </p>
 
         <div className="kpi-row" style={{ marginTop: "1.25rem" }}>
+          <p className="kpi-group-label">Coverage — more people are covered</p>
           <KpiTile
             label="Hospital cover — people"
             value={natNow?.hospitalPersons != null ? fmtInt(natNow.hospitalPersons) : "—"}
@@ -171,19 +171,22 @@ export function App() {
                 : undefined
             }
           />
+          <p className="kpi-group-label">Tier mix — but trading down within hospital cover</p>
           <KpiTile
+            variant="tier"
             label="Gold — share of hospital cover"
             value={goldShareLatest != null ? `${fmtPct(goldShareLatest)}%` : "—"}
             delta={
               tierInsight.goldDeltaPp != null
                 ? {
-                    text: `${tierInsight.goldDeltaPp >= 0 ? "+" : ""}${tierInsight.goldDeltaPp.toFixed(1)} pp since ${shortQuarterLabel(BASELINE_QUARTER)}`,
+                    text: `${tierInsight.goldDeltaPp >= 0 ? "+" : ""}${tierInsight.goldDeltaPp.toFixed(1)} pp vs ${shortQuarterLabel(BASELINE_QUARTER)}`,
                     direction: tierInsight.goldDeltaPp <= 0 ? "down" : "up",
                   }
                 : undefined
             }
           />
           <KpiTile
+            variant="tier"
             label="Silver + Bronze — combined share"
             value={
               tierInsight.silverBronzeShareNow != null
@@ -193,7 +196,7 @@ export function App() {
             delta={
               tierInsight.silverBronzeDeltaPp != null
                 ? {
-                    text: `${tierInsight.silverBronzeDeltaPp >= 0 ? "+" : ""}${tierInsight.silverBronzeDeltaPp.toFixed(1)} pp since ${shortQuarterLabel(BASELINE_QUARTER)}`,
+                    text: `${tierInsight.silverBronzeDeltaPp >= 0 ? "+" : ""}${tierInsight.silverBronzeDeltaPp.toFixed(1)} pp vs ${shortQuarterLabel(BASELINE_QUARTER)}`,
                     direction: tierInsight.silverBronzeDeltaPp >= 0 ? "up" : "down",
                   }
                 : undefined
@@ -234,16 +237,21 @@ export function App() {
         {premium && premiumEnd ? (
           <>
             <p className="big-stat">
-              Gold premium index +{premiumGoldCum != null ? premiumGoldCum.toFixed(0) : "—"}%
-              cumulative since 2020 (base 100) vs industry average +
-              {premiumIndCum != null ? premiumIndCum.toFixed(0) : "—"}% — big-five tier estimates
-              from CHOICE from 2025 rounds onward.
+              Gold premiums up about{" "}
+              <span className="emph-blue">+{premiumGoldCum != null ? premiumGoldCum.toFixed(0) : "—"}%</span>{" "}
+              cumulatively since 2020, versus{" "}
+              <span className="emph-muted">+{premiumIndCum != null ? premiumIndCum.toFixed(0) : "—"}%</span>{" "}
+              for the industry average — and Gold&apos;s share of hospital cover has fallen by{" "}
+              <span className="emph-red">
+                {tierInsight.goldDeltaPp != null ? `${Math.abs(tierInsight.goldDeltaPp).toFixed(1)} pp` : "—"}
+              </span>{" "}
+              over the same window.
             </p>
             <p className="insight-sub">
-              Gold cover has absorbed a disproportionate share of premium inflation as the 2019 reforms
-              broadened mandatory Gold benefits. Over the same window, Gold&apos;s share of
-              hospital-cover persons has fallen by more than ten percentage points — consistent with
-              households responding to price. Sources:{" "}
+              Per-tier increases are only published in machine-readable form for the 2025 and 2026
+              rounds (CHOICE big-five). For 2020–2024 the chart conservatively uses the DoH industry
+              average (dashed segments) — a lower-bound assumption. Even so, the Gold–vs–industry gap
+              opens decisively from 2025. Households appear to be responding to price. Sources:{" "}
               <a
                 href="https://www.choice.com.au/money/insurance/health/articles/health-insurance-price-hikes-higher-than-ever-what-youre-really-paying"
                 target="_blank"

@@ -7,9 +7,14 @@
   --surface: #ffffff;
   --bg: #ffffff;
   --grid: rgba(208, 214, 220, 0.35);
-  --chart-amber: #3f67d8;
   --chart-brick: #c0002f;
   --chart-warm-grey: #7b868c;
+  --chart-blue-2: #3f67d8;
+  --tier-gold: #b8860b;
+  --tier-silver: #8a939b;
+  --tier-bronze: #a0522d;
+  --tier-basic: #051c2c;
+  --tier-legacy: #c9ccd1;
   --font-serif: Georgia, "Times New Roman", serif;
   --font-sans: "Inter", system-ui, -apple-system, sans-serif;
   --font: var(--font-sans);
@@ -83,7 +88,21 @@ a:hover {
 .kpi-row {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
+  gap: 1rem 1.25rem;
+}
+
+.kpi-group-label {
+  grid-column: 1 / -1;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin: 0.5rem 0 -0.5rem;
+}
+
+.kpi-group-label:first-child {
+  margin-top: 0;
 }
 
 .kpi {
@@ -91,6 +110,11 @@ a:hover {
   border: none;
   border-top: 1px solid var(--rule);
   padding: 1rem 0 0.25rem;
+}
+
+.kpi.kpi--tier {
+  border-top-color: var(--ink);
+  border-top-width: 2px;
 }
 
 .kpi .label {
@@ -184,10 +208,6 @@ h2.section-title {
   min-height: 0;
 }
 
-.chart-panel--compact {
-  min-height: 240px;
-}
-
 .chart-panel--tall {
   min-height: 380px;
 }
@@ -260,7 +280,27 @@ h2.section-title {
   font-weight: 600;
   color: var(--ink);
   margin: 0 0 0.5rem;
+  line-height: 1.35;
 }
+
+.emph-blue {
+  color: var(--accent-2);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.emph-red {
+  color: var(--chart-brick);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.emph-muted {
+  color: var(--muted);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
 
 .two-panel {
   display: grid;

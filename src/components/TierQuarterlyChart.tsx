@@ -15,14 +15,14 @@ import { fmtPct, shortQuarterLabel } from "../format";
 import type { TierKey, TierQuarter } from "../types";
 
 const TIER_META: { key: TierKey; label: string; color: string }[] = [
-  { key: "gold", label: "Gold", color: "#2251ff" },
-  { key: "silver", label: "Silver", color: "#7b868c" },
-  { key: "bronze", label: "Bronze", color: "#9e3c21" },
-  { key: "basic", label: "Basic", color: "#051c2c" },
+  { key: "gold", label: "Gold", color: "var(--tier-gold)" },
+  { key: "silver", label: "Silver", color: "var(--tier-silver)" },
+  { key: "bronze", label: "Bronze", color: "var(--tier-bronze)" },
+  { key: "basic", label: "Basic", color: "var(--tier-basic)" },
   {
     key: "other",
     label: "Legacy (pre-reform, migrating out 2019–2020)",
-    color: "#c9ccd1",
+    color: "var(--tier-legacy)",
   },
 ];
 
@@ -97,7 +97,8 @@ export function TierQuarterlyChart({ data }: Props) {
         </div>
       </div>
 
-      <div style={{ width: "100%", height: 400 }}>
+      <div style={{ display: "flex", gap: 12, alignItems: "stretch" }}>
+      <div style={{ flex: "1 1 auto", height: 400, minWidth: 0 }}>
         <ResponsiveContainer>
           {mode === "share" ? (
             <AreaChart data={rows} margin={{ top: 8, right: 16, bottom: 16, left: 4 }}>
@@ -119,9 +120,9 @@ export function TierQuarterlyChart({ data }: Props) {
               {mandatoryLabel && (
                 <ReferenceLine
                   x={mandatoryLabel}
-                  stroke="var(--chart-brick)"
-                  strokeDasharray="4 4"
-                  strokeOpacity={0.45}
+                  stroke="var(--muted)"
+                  strokeDasharray="3 3"
+                  strokeOpacity={0.5}
                   label={{
                     value: "Tiers mandatory (Apr 2020)",
                     position: "insideTopRight",
@@ -164,9 +165,9 @@ export function TierQuarterlyChart({ data }: Props) {
               {mandatoryLabel && (
                 <ReferenceLine
                   x={mandatoryLabel}
-                  stroke="var(--chart-brick)"
-                  strokeDasharray="4 4"
-                  strokeOpacity={0.45}
+                  stroke="var(--muted)"
+                  strokeDasharray="3 3"
+                  strokeOpacity={0.5}
                   label={{
                     value: "Tiers mandatory (Apr 2020)",
                     position: "insideTopRight",
@@ -192,19 +193,56 @@ export function TierQuarterlyChart({ data }: Props) {
         </ResponsiveContainer>
       </div>
       {mode === "share" && latestShares.length > 0 && (
-        <div className="tier-latest-row" aria-hidden>
-          <span>
-            <strong>Latest quarter</strong> —{" "}
-            {latestShares.map((s, i) => (
-              <span key={s.label}>
-                {i > 0 ? " · " : ""}
-                {s.label.split("(")[0].trim()}{" "}
-                <strong>{s.share != null ? `${fmtPct(s.share)}%` : "—"}</strong>
-              </span>
-            ))}
-          </span>
+        <div
+          className="tier-end-labels"
+          aria-hidden
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            gap: 6,
+            paddingTop: 8,
+            paddingBottom: 24,
+            minWidth: 92,
+          }}
+        >
+          {latestShares
+            .filter((s) => !s.label.startsWith("Legacy") || (s.share ?? 0) > 0.005)
+            .map((s) => {
+              const meta = TIER_META.find((t) => t.label === s.label);
+              return (
+                <div
+                  key={s.label}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    fontSize: 12,
+                    lineHeight: 1.15,
+                  }}
+                >
+                  <span
+                    style={{
+                      display: "inline-block",
+                      width: 10,
+                      height: 10,
+                      background: meta?.color ?? "var(--muted)",
+                      borderRadius: 2,
+                      flex: "0 0 auto",
+                    }}
+                  />
+                  <span style={{ color: "var(--ink)", fontWeight: 600 }}>
+                    {s.label.split("(")[0].trim()}
+                  </span>
+                  <span style={{ color: "var(--muted)", marginLeft: "auto", fontVariantNumeric: "tabular-nums" }}>
+                    {s.share != null ? `${fmtPct(s.share)}%` : "—"}
+                  </span>
+                </div>
+              );
+            })}
         </div>
       )}
+      </div>
     </div>
   );
 }

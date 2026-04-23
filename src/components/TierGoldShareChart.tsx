@@ -63,8 +63,8 @@ export function TierGoldShareChart({
             type="monotone"
             dataKey="gold"
             name="Gold"
-            stroke="var(--chart-brick)"
-            strokeWidth={2.5}
+            stroke="var(--tier-gold)"
+            strokeWidth={2.8}
             dot={false}
             isAnimationActive={false}
           />

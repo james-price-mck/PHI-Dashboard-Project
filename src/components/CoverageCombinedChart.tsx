@@ -64,18 +64,17 @@ const tooltipStyle = {
 
 type Props = {
   data: NationalQuarter[];
-  compact?: boolean;
 };
 
-export function CoverageCombinedChart({ data, compact }: Props) {
+export function CoverageCombinedChart({ data }: Props) {
   const [mode, setMode] = useState<Mode>("share");
   const rows = useMemo(() => buildRows(data), [data]);
   const refRow = rows.find((r) => r.q === METHODOLOGY_REF_QUARTER);
-  const height = compact ? 240 : 320;
+  const height = 320;
 
   return (
     <div
-      className={compact ? "chart-panel chart-panel--compact" : "chart-panel"}
+      className="chart-panel"
       role="img"
       aria-label="Hospital cover and extras cover over time, share of population or people covered."
     >
@@ -101,16 +100,16 @@ export function CoverageCombinedChart({ data, compact }: Props) {
         </div>
       </div>
       <ResponsiveContainer width="100%" height={height}>
-        <LineChart data={rows} margin={{ top: 8, right: 16, left: 4, bottom: compact ? 24 : 8 }}>
+        <LineChart data={rows} margin={{ top: 8, right: 16, left: 4, bottom: 8 }}>
           <CartesianGrid stroke="var(--grid)" vertical={false} />
           <XAxis
             dataKey="label"
             interval={Math.max(0, Math.floor(rows.length / 8) - 1)}
-            angle={compact ? 0 : -35}
-            textAnchor={compact ? "middle" : "end"}
-            height={compact ? 28 : 56}
+            angle={-35}
+            textAnchor="end"
+            height={56}
             tick={{ fill: "var(--muted)", fontSize: 9 }}
-            minTickGap={compact ? 8 : 24}
+            minTickGap={24}
           />
           {mode === "share" ? (
             <YAxis
@@ -144,7 +143,7 @@ export function CoverageCombinedChart({ data, compact }: Props) {
                 type="monotone"
                 dataKey="hospital_rate"
                 name="Hospital cover"
-                stroke="#2251ff"
+                stroke="var(--accent-2)"
                 dot={false}
                 strokeWidth={2.6}
                 connectNulls
@@ -154,7 +153,7 @@ export function CoverageCombinedChart({ data, compact }: Props) {
                 type="monotone"
                 dataKey="general_rate"
                 name="Extras cover"
-                stroke="#9e3c21"
+                stroke="var(--chart-brick)"
                 dot={false}
                 strokeWidth={2.3}
                 connectNulls
@@ -167,7 +166,7 @@ export function CoverageCombinedChart({ data, compact }: Props) {
                 type="monotone"
                 dataKey="hospital_persons"
                 name="Hospital cover"
-                stroke="#2251ff"
+                stroke="var(--accent-2)"
                 dot={false}
                 strokeWidth={2.6}
                 connectNulls
@@ -177,7 +176,7 @@ export function CoverageCombinedChart({ data, compact }: Props) {
                 type="monotone"
                 dataKey="general_persons"
                 name="Extras cover"
-                stroke="#9e3c21"
+                stroke="var(--chart-brick)"
                 dot={false}
                 strokeWidth={2.3}
                 connectNulls
@@ -188,11 +187,11 @@ export function CoverageCombinedChart({ data, compact }: Props) {
           {refRow && (
             <ReferenceLine
               x={refRow.label}
-              stroke="var(--chart-brick)"
-              strokeDasharray="4 4"
+              stroke="var(--muted)"
+              strokeDasharray="3 3"
               strokeOpacity={0.55}
               label={{
-                value: "Jul 2023 — APRA AASB 17 (capital reporting; membership unaffected)",
+                value: "Sep 2023 quarter — first APRA bundle under AASB 17 (membership unaffected)",
                 position: "top",
                 fill: "var(--muted)",
                 fontSize: 9,
