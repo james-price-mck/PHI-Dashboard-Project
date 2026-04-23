@@ -192,7 +192,7 @@ export function App() {
 
         <div className="kpi-group-header kpi-group-header--inverse">
           <p>Coverage — more people are covered</p>
-          <p>Tier mix — trading down within hospital cover</p>
+          <p>Tier mix - consumers are downgrading</p>
         </div>
         <div className="kpi-row kpi-row--inverse">
           <KpiTile
