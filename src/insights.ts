@@ -264,39 +264,64 @@ export function computeNetNewByAgeGroup(
   };
 }
 
+export type AgeYoyCohortKey =
+  | "under25"
+  | "a25_34"
+  | "a35_49"
+  | "a50_64"
+  | "o65";
+
 /**
- * Three broad age groups used by the YoY growth-in-covered-persons view
- * (matches AgeCoverageChart display).
+ * Decision-age cohorts used by the YoY growth-in-covered-persons view. Under-25
+ * is included for completeness but represents dependants on family policies
+ * rather than independent buyers.
  */
-export const AGE_YOY_GROUPS: { key: "u35" | "m35_64" | "o65"; label: string; bands: string[] }[] = [
+export const AGE_YOY_GROUPS: {
+  key: AgeYoyCohortKey;
+  label: string;
+  bands: string[];
+  decisionMaker: boolean;
+}[] = [
   {
-    key: "u35",
-    label: "Under 35",
-    bands: ["0-4", "5-9", "10-14", "15-19", "20-24", "25-29", "30-34"],
+    key: "under25",
+    label: "Under 25",
+    bands: ["0-4", "5-9", "10-14", "15-19", "20-24"],
+    decisionMaker: false,
   },
   {
-    key: "m35_64",
-    label: "35–64",
-    bands: ["35-39", "40-44", "45-49", "50-54", "55-59", "60-64"],
+    key: "a25_34",
+    label: "25–34",
+    bands: ["25-29", "30-34"],
+    decisionMaker: true,
+  },
+  {
+    key: "a35_49",
+    label: "35–49",
+    bands: ["35-39", "40-44", "45-49"],
+    decisionMaker: true,
+  },
+  {
+    key: "a50_64",
+    label: "50–64",
+    bands: ["50-54", "55-59", "60-64"],
+    decisionMaker: true,
   },
   {
     key: "o65",
     label: "65 and over",
     bands: ["65-69", "70-74", "75-79", "80+"],
+    decisionMaker: true,
   },
 ];
 
-export type AgeYoyRow = {
-  quarter: string;
-  u35: number | null;
-  m35_64: number | null;
-  o65: number | null;
+export type AgeYoyRow = { quarter: string } & {
+  [K in AgeYoyCohortKey]: number | null;
 };
 
 /**
- * Trailing-4-quarter year-on-year percent change in insured persons per age group,
- * returned as decimals (e.g. 0.021 = 2.1%). Earliest 4 quarters have nulls because
- * the YoY baseline is unavailable.
+ * Trailing-4-quarter year-on-year percent change in insured persons per age
+ * cohort, returned as decimals (e.g. 0.021 = 2.1%). Earliest 4 quarters have
+ * nulls because the YoY baseline is unavailable.
  */
 export function computeAgeYoyGrowthSeries(ageQuarters: AgeCoverageQuarter[]): AgeYoyRow[] {
   const sorted = [...ageQuarters].sort((a, b) => a.quarter.localeCompare(b.quarter));
@@ -312,7 +337,10 @@ export function computeAgeYoyGrowthSeries(ageQuarters: AgeCoverageQuarter[]): Ag
   for (let i = 0; i < sorted.length; i++) {
     const q = sorted[i];
     const prior = i >= 4 ? sorted[i - 4] : null;
-    const row: AgeYoyRow = { quarter: q.quarter, u35: null, m35_64: null, o65: null };
+    const row = { quarter: q.quarter } as AgeYoyRow;
+    for (const g of AGE_YOY_GROUPS) {
+      row[g.key] = null;
+    }
     if (prior) {
       for (const g of AGE_YOY_GROUPS) {
         const now = sumInsured(q, g.bands);
