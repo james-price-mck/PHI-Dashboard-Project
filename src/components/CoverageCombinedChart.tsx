@@ -12,7 +12,7 @@ import {
 import { METHODOLOGY_REF_QUARTER } from "../constants";
 import { BASELINE_QUARTER } from "../insights";
 import type { NationalQuarter } from "../types";
-import { fmtInt, fmtPct, shortQuarterLabel } from "../format";
+import { fmtInt, fmtMonthYear, fmtPct, shortQuarterLabel } from "../format";
 
 type Mode = "share" | "levels";
 
@@ -142,7 +142,7 @@ export function CoverageCombinedChart({ data }: Props) {
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
           {first && last && (
             <span className="chart-daterange">
-              {first.label} – {last.label}
+              {first.label.slice(0, 4)} to {last.label.slice(0, 4)}
             </span>
           )}
           <div className="segmented" role="group" aria-label="Chart metric">
@@ -151,7 +151,7 @@ export function CoverageCombinedChart({ data }: Props) {
               aria-pressed={mode === "share"}
               onClick={() => setMode("share")}
             >
-              % of population
+              Share
             </button>
             <button
               type="button"
@@ -203,7 +203,7 @@ export function CoverageCombinedChart({ data }: Props) {
                 }}
                 labelFormatter={(_l, p) => {
                   const r = p?.[0]?.payload as Row | undefined;
-                  return r ? `Quarter ending ${shortQuarterLabel(r.q)}` : "";
+                  return r ? fmtMonthYear(r.q) : "";
                 }}
               />
               <Line
@@ -237,7 +237,7 @@ export function CoverageCombinedChart({ data }: Props) {
                   strokeDasharray="3 3"
                   strokeOpacity={0.55}
                   label={{
-                    value: "Sep 2023 — first APRA bundle under AASB 17 (membership unaffected)",
+                    value: "Sep 2023, first APRA bundle under AASB 17 (membership unaffected)",
                     position: "top",
                     fill: "var(--slate)",
                     fontSize: 10,
@@ -269,7 +269,7 @@ export function CoverageCombinedChart({ data }: Props) {
                 fontWeight: 700,
               }}
             >
-              Latest — {last.label}
+              Latest, {fmtMonthYear(last.q)}
             </div>
             <div style={{ fontSize: 12, lineHeight: 1.2 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>

@@ -57,7 +57,7 @@ export function ElasticityCallout({ elasticity, baselineLabel, latestLabel }: Pr
           color: "var(--mid-blue)",
         }}
       >
-        Price-inelastic demand for Gold tier
+        Gold demand is price-inelastic
       </h3>
       <div className="stat-grid" role="group" aria-label="Gold elasticity stats">
         <div className="stat">
@@ -69,12 +69,12 @@ export function ElasticityCallout({ elasticity, baselineLabel, latestLabel }: Pr
         </div>
         <div className="stat">
           <div className="label">
-            Gold members — change ({baselineLabel} → {latestLabel})
+            People on Gold, change ({baselineLabel} to {latestLabel})
           </div>
           <div className="value">{signed(deltaQuantityPct, 1)}%</div>
           <div className="hint">
             {goldPersonsThen != null && goldPersonsNow != null
-              ? `${fmtInt(goldPersonsThen)} → ${fmtInt(goldPersonsNow)} people on Gold.`
+              ? `${fmtInt(goldPersonsThen)} to ${fmtInt(goldPersonsNow)} people on Gold.`
               : ""}
           </div>
         </div>

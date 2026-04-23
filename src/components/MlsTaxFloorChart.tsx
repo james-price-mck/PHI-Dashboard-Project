@@ -166,7 +166,7 @@ export function MlsTaxFloorChart({ policy, tierSeries }: Props) {
                   stroke="var(--mid-blue)"
                   strokeDasharray="3 3"
                   label={{
-                    value: `Breakeven ~${formatAud(breakeven.breakevenIncomeAud)}`,
+                    value: `Breakeven ${formatAud(breakeven.breakevenIncomeAud)}`,
                     position: "top",
                     fill: "var(--mid-blue)",
                     fontSize: 10,

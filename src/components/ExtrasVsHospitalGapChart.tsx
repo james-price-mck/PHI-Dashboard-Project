@@ -9,7 +9,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { shortQuarterLabel } from "../format";
+import { fmtMonthYear, shortQuarterLabel } from "../format";
 import { BASELINE_QUARTER, computeExtrasHospitalGapSeries } from "../insights";
 import type { NationalQuarter } from "../types";
 
@@ -43,11 +43,24 @@ export function ExtrasVsHospitalGapChart({ national }: Props) {
   const last = rows.at(-1);
   const baselineLabel = shortQuarterLabel(BASELINE_QUARTER);
 
+  const yearTicks = useMemo(() => {
+    const seen = new Set<string>();
+    const ticks: string[] = [];
+    for (const r of rows) {
+      const y = r.label.slice(0, 4);
+      if (!seen.has(y)) {
+        seen.add(y);
+        ticks.push(r.label);
+      }
+    }
+    return ticks;
+  }, [rows]);
+
   return (
     <div
       className="chart-panel chart-panel--tall"
       role="img"
-      aria-label={`Cumulative percentage-point change in hospital and extras coverage share since ${baselineLabel.slice(0, 4)}. Extras outpaces hospital.`}
+      aria-label={`Cumulative percentage-point change in hospital-cover and extras-cover share of population since ${baselineLabel.slice(0, 4)}. Extras outpaces hospital.`}
     >
       <div className="chart-toolbar-row">
         <span className="chart-title">
@@ -55,7 +68,7 @@ export function ExtrasVsHospitalGapChart({ national }: Props) {
         </span>
         {first && last && (
           <span className="chart-daterange">
-            {first.label.slice(0, 4)} – {last.label.slice(0, 4)}
+            {first.label.slice(0, 4)} to {last.label.slice(0, 4)}
           </span>
         )}
       </div>
@@ -66,6 +79,8 @@ export function ExtrasVsHospitalGapChart({ national }: Props) {
               <CartesianGrid stroke="var(--grid)" vertical={false} />
               <XAxis
                 dataKey="label"
+                ticks={yearTicks}
+                tickFormatter={(l: string) => (l ? l.slice(0, 4) : "")}
                 tick={{ fill: "var(--slate)", fontSize: 11 }}
                 minTickGap={24}
               />
@@ -78,9 +93,7 @@ export function ExtrasVsHospitalGapChart({ national }: Props) {
                 contentStyle={tooltipStyle}
                 labelFormatter={(_l, p) => {
                   const r = p?.[0]?.payload as { quarter?: string } | undefined;
-                  return r?.quarter
-                    ? `Quarter ending ${shortQuarterLabel(r.quarter)}`
-                    : "";
+                  return r?.quarter ? fmtMonthYear(r.quarter) : "";
                 }}
                 formatter={(val: number | string, name: string) => {
                   if (typeof val !== "number" || !Number.isFinite(val)) return ["—", name];

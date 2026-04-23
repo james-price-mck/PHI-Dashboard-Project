@@ -7,7 +7,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { fmtPct, shortQuarterLabel } from "../format";
+import { fmtMonthYear, fmtPct, shortQuarterLabel } from "../format";
 import type { TierQuarter } from "../types";
 import { BASELINE_QUARTER } from "../insights";
 
@@ -39,6 +39,16 @@ export function TierGoldShareChart({
   const last = rows.at(-1);
   const baselineLabel = shortQuarterLabel(baselineQuarter);
 
+  const yearTicks: string[] = [];
+  const seenYears = new Set<string>();
+  for (const r of rows) {
+    const y = r.label.slice(0, 4);
+    if (!seenYears.has(y)) {
+      seenYears.add(y);
+      yearTicks.push(r.label);
+    }
+  }
+
   return (
     <div
       className="chart-panel"
@@ -51,14 +61,20 @@ export function TierGoldShareChart({
         </span>
         {first && last && (
           <span className="chart-daterange">
-            {first.label.slice(0, 4)} – {last.label.slice(0, 4)}
+            {first.label.slice(0, 4)} to {last.label.slice(0, 4)}
           </span>
         )}
       </div>
       <ResponsiveContainer width="100%" height={260}>
         <LineChart data={rows} margin={{ top: 8, right: 8, left: 0, bottom: 8 }}>
           <CartesianGrid stroke="var(--grid)" vertical={false} />
-          <XAxis dataKey="label" minTickGap={20} tick={{ fill: "var(--slate)", fontSize: 11 }} />
+          <XAxis
+            dataKey="label"
+            ticks={yearTicks}
+            tickFormatter={(l: string) => (l ? l.slice(0, 4) : "")}
+            minTickGap={20}
+            tick={{ fill: "var(--slate)", fontSize: 11 }}
+          />
           <YAxis
             domain={[0.2, 0.45]}
             tickFormatter={(v) => `${(v * 100).toFixed(0)}%`}
@@ -70,7 +86,7 @@ export function TierGoldShareChart({
             formatter={(v: number) => [`${fmtPct(v)}%`, "Gold share"]}
             labelFormatter={(_l, p) => {
               const r = p?.[0]?.payload as { q: string } | undefined;
-              return r ? `Quarter ending ${shortQuarterLabel(r.q)}` : "";
+              return r ? fmtMonthYear(r.q) : "";
             }}
           />
           <Line

@@ -9,7 +9,7 @@ import {
   YAxis,
 } from "recharts";
 import type { JurisdictionQuarter } from "../types";
-import { fmtPct, jurisdictionDisplayName, shortQuarterLabel } from "../format";
+import { fmtMonthYear, fmtPct, jurisdictionDisplayName, shortQuarterLabel } from "../format";
 import { BASELINE_QUARTER } from "../insights";
 
 const PANEL_ORDER = ["NSW_ACT", "VIC", "QLD", "WA", "SA_NT", "TAS"] as const;
@@ -135,7 +135,7 @@ export function JurisdictionChart({
                   formatter={(v: number, name: string) => [fmtPct(v) + "%", name]}
                   labelFormatter={(_l, p) => {
                     const r = p?.[0]?.payload as { q: string } | undefined;
-                    return r ? `Quarter ending ${shortQuarterLabel(r.q)}` : "";
+                    return r ? fmtMonthYear(r.q) : "";
                   }}
                 />
                 <Line

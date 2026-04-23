@@ -33,6 +33,25 @@ export function shortQuarterLabel(iso: string): string {
   return `${y} Q${q}`;
 }
 
+/**
+ * User-facing month-year label (e.g. "Apr 2026").
+ * We use this in place of quarter labels in tooltips, footers, and chips,
+ * so exec readers see a concrete calendar month rather than "2026 Q2".
+ */
+export function fmtMonthYear(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  return `${months[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
+}
+
+/** Year only (e.g. "2026") from an ISO date. */
+export function fmtYear(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  return String(d.getUTCFullYear());
+}
+
 export function yyyymmdd(iso: string): string {
   return iso.slice(0, 10);
 }

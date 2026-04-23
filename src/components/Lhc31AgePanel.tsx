@@ -9,7 +9,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { shortQuarterLabel } from "../format";
+import { fmtMonthYear, shortQuarterLabel } from "../format";
 import {
   computeCoverageRateSeriesByBand,
   computeLhc31Shortfall,
@@ -111,6 +111,20 @@ export function Lhc31AgePanel({ ageQuarters, latestQuarter, baselineQuarter }: P
     }));
   }, [ageQuarters]);
 
+  // One X-axis tick per calendar year, not per quarter.
+  const yearTicks = useMemo(() => {
+    const seen = new Set<string>();
+    const ticks: string[] = [];
+    for (const r of chartRows) {
+      const y = r.label.slice(0, 4);
+      if (!seen.has(y)) {
+        seen.add(y);
+        ticks.push(r.label);
+      }
+    }
+    return ticks;
+  }, [chartRows]);
+
   const shortfallRows = useMemo(
     () =>
       computeLhc31Shortfall(
@@ -135,14 +149,14 @@ export function Lhc31AgePanel({ ageQuarters, latestQuarter, baselineQuarter }: P
   }
 
   return (
-    <div className="chart-panel" style={{ marginTop: 12 }} role="region" aria-label="25–29 coverage has risen under the Age-Based Discount; 30–34 coverage has fallen despite the Lifetime Health Cover loading.">
+    <div className="chart-panel" style={{ marginTop: 12 }} role="region" aria-label="Hospital-cover rate by age band, 25 to 29 rising under the Age-Based Discount, 30 to 34 falling despite the Lifetime Health Cover loading.">
       <div className="chart-toolbar-row">
         <span className="chart-title">
-          25–29 coverage has risen under the ABD; 30–34 coverage has fallen despite LHC
+          Hospital-cover rate by age band, 25 to 39
         </span>
         {first && last && (
           <span className="chart-daterange">
-            {first.label} – {last.label}
+            {first.label.slice(0, 4)} to {last.label.slice(0, 4)}
           </span>
         )}
       </div>
@@ -153,6 +167,8 @@ export function Lhc31AgePanel({ ageQuarters, latestQuarter, baselineQuarter }: P
               <CartesianGrid stroke="var(--grid)" vertical={false} />
               <XAxis
                 dataKey="label"
+                ticks={yearTicks}
+                tickFormatter={(l: string) => (l ? l.slice(0, 4) : "")}
                 tick={{ fill: "var(--slate)", fontSize: 11 }}
                 minTickGap={24}
               />
@@ -171,7 +187,7 @@ export function Lhc31AgePanel({ ageQuarters, latestQuarter, baselineQuarter }: P
                 labelFormatter={(_l, p) => {
                   const r = p?.[0]?.payload as { quarter?: string } | undefined;
                   return r?.quarter
-                    ? `Coverage rate · ${shortQuarterLabel(r.quarter)}`
+                    ? `Coverage rate, ${fmtMonthYear(r.quarter)}`
                     : "";
                 }}
               />

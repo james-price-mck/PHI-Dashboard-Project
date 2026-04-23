@@ -11,7 +11,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { fmtPct, shortQuarterLabel } from "../format";
+import { fmtMonthYear, fmtPct, shortQuarterLabel } from "../format";
 import type { TierKey, TierQuarter } from "../types";
 
 const TIER_META: { key: TierKey; label: string; color: string }[] = [
@@ -21,7 +21,7 @@ const TIER_META: { key: TierKey; label: string; color: string }[] = [
   { key: "basic", label: "Basic", color: "var(--tier-basic)" },
   {
     key: "other",
-    label: "Legacy (pre-reform, migrating out 2019–2020)",
+    label: "Legacy (pre-reform)",
     color: "var(--tier-legacy)",
   },
 ];
@@ -30,12 +30,17 @@ type Mode = "share" | "levels";
 
 type Row = {
   quarter: string;
+  iso: string;
   total: number | null;
 } & Partial<Record<string, number | null>>;
 
 function buildRows(data: TierQuarter[], mode: Mode): Row[] {
   return data.map((d) => {
-    const row: Row = { quarter: shortQuarterLabel(d.quarter), total: d.total_insured_persons };
+    const row: Row = {
+      quarter: shortQuarterLabel(d.quarter),
+      iso: d.quarter,
+      total: d.total_insured_persons,
+    };
     for (const t of TIER_META) {
       const raw = mode === "share" ? d.share[t.key] : d.insured_persons[t.key];
       row[t.label] = raw;
@@ -62,6 +67,21 @@ export function TierQuarterlyChart({ data }: Props) {
   const mandatoryLabel = rows.find((r) => r.quarter === "2020 Q2")?.quarter;
   const latest = data.at(-1);
 
+  // Show one X-axis tick per calendar year, not per quarter, so exec readers
+  // see years rather than "2020 Q2 / 2020 Q3 / ...".
+  const yearTicks = useMemo(() => {
+    const seen = new Set<string>();
+    const ticks: string[] = [];
+    for (const r of rows) {
+      const y = r.quarter.slice(0, 4);
+      if (!seen.has(y)) {
+        seen.add(y);
+        ticks.push(r.quarter);
+      }
+    }
+    return ticks;
+  }, [rows]);
+
   const latestShares = useMemo(() => {
     if (!latest) return [];
     return TIER_META.map((t) => ({
@@ -77,12 +97,12 @@ export function TierQuarterlyChart({ data }: Props) {
     >
       <div className="chart-toolbar-row">
         <span className="chart-title">
-          Hospital cover — product-tier mix
+          Hospital cover, product-tier mix
         </span>
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
           {rows.length > 0 && (
             <span className="chart-daterange">
-              {rows[0].quarter.slice(0, 4)} – {rows[rows.length - 1].quarter.slice(0, 4)}
+              {rows[0].quarter.slice(0, 4)} to {rows[rows.length - 1].quarter.slice(0, 4)}
             </span>
           )}
           <div className="segmented" role="group" aria-label="Tier chart mode">
@@ -98,7 +118,7 @@ export function TierQuarterlyChart({ data }: Props) {
               aria-pressed={mode === "levels"}
               onClick={() => setMode("levels")}
             >
-              People covered
+              People (m)
             </button>
           </div>
         </div>
@@ -110,7 +130,13 @@ export function TierQuarterlyChart({ data }: Props) {
           {mode === "share" ? (
             <AreaChart data={rows} margin={{ top: 8, right: 16, bottom: 16, left: 4 }}>
               <CartesianGrid stroke="var(--grid)" vertical={false} />
-              <XAxis dataKey="quarter" minTickGap={24} tick={{ fill: "var(--slate)", fontSize: 11 }} />
+              <XAxis
+                dataKey="quarter"
+                ticks={yearTicks}
+                tickFormatter={(l: string) => (l ? l.slice(0, 4) : "")}
+                minTickGap={24}
+                tick={{ fill: "var(--slate)", fontSize: 11 }}
+              />
               <YAxis
                 tickFormatter={(v: number) => `${Math.round(v * 100)}%`}
                 domain={[0, 1]}
@@ -122,6 +148,10 @@ export function TierQuarterlyChart({ data }: Props) {
                 formatter={(v: number | string) => {
                   if (typeof v !== "number" || !Number.isFinite(v)) return ["—"];
                   return [`${(v * 100).toFixed(1)}%`];
+                }}
+                labelFormatter={(_l, p) => {
+                  const r = p?.[0]?.payload as Row | undefined;
+                  return r?.iso ? fmtMonthYear(r.iso) : "";
                 }}
               />
               {mandatoryLabel && (
@@ -155,10 +185,16 @@ export function TierQuarterlyChart({ data }: Props) {
           ) : (
             <LineChart data={rows} margin={{ top: 8, right: 16, bottom: 16, left: 4 }}>
               <CartesianGrid stroke="var(--grid)" vertical={false} />
-              <XAxis dataKey="quarter" minTickGap={24} tick={{ fill: "var(--slate)", fontSize: 11 }} />
+              <XAxis
+                dataKey="quarter"
+                ticks={yearTicks}
+                tickFormatter={(l: string) => (l ? l.slice(0, 4) : "")}
+                minTickGap={24}
+                tick={{ fill: "var(--slate)", fontSize: 11 }}
+              />
               <YAxis
                 tickFormatter={(v: number) =>
-                  v >= 1_000_000 ? `${(v / 1_000_000).toFixed(1)}M` : v.toLocaleString()
+                  v >= 1_000_000 ? `${(v / 1_000_000).toFixed(1)}m` : v.toLocaleString()
                 }
                 tick={{ fill: "var(--slate)", fontSize: 11 }}
                 width={44}
@@ -168,6 +204,10 @@ export function TierQuarterlyChart({ data }: Props) {
                 formatter={(v: number | string) => {
                   if (typeof v !== "number" || !Number.isFinite(v)) return ["—"];
                   return [v.toLocaleString("en-AU", { maximumFractionDigits: 0 })];
+                }}
+                labelFormatter={(_l, p) => {
+                  const r = p?.[0]?.payload as Row | undefined;
+                  return r?.iso ? fmtMonthYear(r.iso) : "";
                 }}
               />
               {mandatoryLabel && (
