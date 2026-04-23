@@ -88,8 +88,8 @@ export function JurisdictionChart({
                 <YAxis
                   domain={[0.30, 0.54]}
                   tickFormatter={(v) => `${(v * 100).toFixed(0)}%`}
-                  tick={{ fill: "var(--muted)", fontSize: 9 }}
-                  width={32}
+                  tick={{ fill: "var(--slate)", fontSize: 10 }}
+                  width={34}
                 />
                 <Tooltip
                   contentStyle={tooltipStyle}
@@ -103,8 +103,9 @@ export function JurisdictionChart({
                   type="monotone"
                   dataKey="AUST"
                   name="Australia (national)"
-                  stroke="var(--rule)"
+                  stroke="var(--slate)"
                   strokeWidth={1.5}
+                  strokeDasharray="4 4"
                   dot={false}
                   connectNulls
                   isAnimationActive={false}
@@ -113,8 +114,8 @@ export function JurisdictionChart({
                   type="monotone"
                   dataKey={key}
                   name={jurisdictionDisplayName(key)}
-                  stroke="var(--accent-2)"
-                  strokeWidth={2}
+                  stroke="var(--mid-blue)"
+                  strokeWidth={2.4}
                   dot={false}
                   connectNulls
                   isAnimationActive={false}

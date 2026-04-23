@@ -1,7 +1,6 @@
 import { useMemo } from "react";
 import {
   CartesianGrid,
-  Legend,
   Line,
   LineChart,
   ReferenceLine,
@@ -40,14 +39,26 @@ export function ExtrasVsHospitalGapChart({ national }: Props) {
       }));
   }, [national]);
 
+  const first = rows[0];
   const last = rows.at(-1);
+  const baselineLabel = shortQuarterLabel(BASELINE_QUARTER);
 
   return (
     <div
       className="chart-panel chart-panel--tall"
       role="img"
-      aria-label="Cumulative percentage-point change in hospital and extras coverage share since 2020 Q2. Extras outpaces hospital."
+      aria-label={`Cumulative percentage-point change in hospital and extras coverage share since ${baselineLabel}. Extras outpaces hospital.`}
     >
+      <div className="chart-toolbar-row">
+        <span className="muted" style={{ fontSize: "0.75rem" }}>
+          Cumulative pp Δ in coverage share since {baselineLabel}
+        </span>
+        {first && last && (
+          <span className="chart-daterange">
+            {first.label} – {last.label}
+          </span>
+        )}
+      </div>
       <div style={{ display: "flex", gap: 16, alignItems: "stretch", flexWrap: "wrap" }}>
         <div style={{ flex: "1 1 420px", minWidth: 0, height: 320 }}>
           <ResponsiveContainer width="100%" height={320}>
@@ -55,12 +66,12 @@ export function ExtrasVsHospitalGapChart({ national }: Props) {
               <CartesianGrid stroke="var(--grid)" vertical={false} />
               <XAxis
                 dataKey="label"
-                tick={{ fill: "var(--muted)", fontSize: 10 }}
+                tick={{ fill: "var(--slate)", fontSize: 11 }}
                 minTickGap={24}
               />
               <YAxis
                 tickFormatter={(v: number) => `${v >= 0 ? "+" : ""}${v.toFixed(1)} pp`}
-                tick={{ fill: "var(--muted)", fontSize: 10 }}
+                tick={{ fill: "var(--slate)", fontSize: 11 }}
                 width={54}
               />
               <Tooltip
@@ -77,30 +88,29 @@ export function ExtrasVsHospitalGapChart({ national }: Props) {
                   return [`${s}${val.toFixed(2)} pp`, name];
                 }}
               />
-              <Legend wrapperStyle={{ fontSize: 11 }} />
               <ReferenceLine
                 y={0}
-                stroke="var(--chart-ink-muted)"
+                stroke="var(--slate)"
                 strokeDasharray="3 3"
                 strokeOpacity={0.6}
               />
               <Line
                 type="monotone"
-                dataKey="extrasPp"
-                name="Extras cover (pp Δ)"
-                stroke="var(--chart-blue-2)"
-                strokeWidth={2.4}
+                dataKey="hospitalPp"
+                name="Hospital cover (pp Δ)"
+                stroke="var(--mid-grey)"
+                strokeWidth={1.8}
+                strokeDasharray="6 4"
                 dot={false}
                 connectNulls
                 isAnimationActive={false}
               />
               <Line
                 type="monotone"
-                dataKey="hospitalPp"
-                name="Hospital cover (pp Δ)"
-                stroke="var(--accent-2)"
-                strokeWidth={2.4}
-                strokeDasharray="6 4"
+                dataKey="extrasPp"
+                name="Extras cover (pp Δ)"
+                stroke="var(--slate)"
+                strokeWidth={1.8}
                 dot={false}
                 connectNulls
                 isAnimationActive={false}
@@ -109,8 +119,8 @@ export function ExtrasVsHospitalGapChart({ national }: Props) {
                 type="monotone"
                 dataKey="gapPp"
                 name="Gap (extras − hospital)"
-                stroke="var(--chart-brick)"
-                strokeWidth={1.8}
+                stroke="var(--mid-blue)"
+                strokeWidth={2.6}
                 dot={false}
                 connectNulls
                 isAnimationActive={false}
@@ -128,44 +138,102 @@ export function ExtrasVsHospitalGapChart({ national }: Props) {
             paddingTop: 12,
           }}
         >
-          <div style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted)", fontWeight: 700 }}>
-            Since {shortQuarterLabel(BASELINE_QUARTER)}
+          <div
+            style={{
+              fontSize: 10,
+              textTransform: "uppercase",
+              letterSpacing: "0.08em",
+              color: "var(--slate)",
+              fontWeight: 700,
+            }}
+          >
+            Since {baselineLabel}
           </div>
           <div>
-            <div style={{ fontSize: "0.68rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 600 }}>
+            <div
+              style={{
+                fontSize: "0.7rem",
+                color: "var(--slate)",
+                textTransform: "uppercase",
+                letterSpacing: "0.06em",
+                fontWeight: 600,
+              }}
+            >
+              Affordability-proxy gap (extras − hospital)
+            </div>
+            <div
+              style={{
+                fontSize: "1.4rem",
+                fontWeight: 600,
+                color: "var(--mid-blue)",
+                fontVariantNumeric: "tabular-nums",
+              }}
+            >
+              {last?.gapPp != null
+                ? `${last.gapPp >= 0 ? "+" : ""}${last.gapPp.toFixed(2)} pp`
+                : "—"}
+            </div>
+            <div style={{ fontSize: "0.75rem", color: "var(--slate)" }}>
+              Extras minus hospital — widened monotonically since the baseline.
+            </div>
+          </div>
+          <div>
+            <div
+              style={{
+                fontSize: "0.7rem",
+                color: "var(--slate)",
+                textTransform: "uppercase",
+                letterSpacing: "0.06em",
+                fontWeight: 600,
+              }}
+            >
               Extras pp Δ
             </div>
-            <div style={{ fontSize: "1.3rem", fontWeight: 600, color: "var(--chart-blue-2)", fontVariantNumeric: "tabular-nums" }}>
+            <div
+              style={{
+                fontSize: "1.15rem",
+                fontWeight: 600,
+                color: "var(--slate)",
+                fontVariantNumeric: "tabular-nums",
+              }}
+            >
               {last?.extrasPp != null
                 ? `${last.extrasPp >= 0 ? "+" : ""}${last.extrasPp.toFixed(2)} pp`
                 : "—"}
             </div>
           </div>
           <div>
-            <div style={{ fontSize: "0.68rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 600 }}>
+            <div
+              style={{
+                fontSize: "0.7rem",
+                color: "var(--slate)",
+                textTransform: "uppercase",
+                letterSpacing: "0.06em",
+                fontWeight: 600,
+              }}
+            >
               Hospital pp Δ
             </div>
-            <div style={{ fontSize: "1.3rem", fontWeight: 600, color: "var(--accent-2)", fontVariantNumeric: "tabular-nums" }}>
+            <div
+              style={{
+                fontSize: "1.15rem",
+                fontWeight: 600,
+                color: "var(--mid-grey)",
+                fontVariantNumeric: "tabular-nums",
+              }}
+            >
               {last?.hospitalPp != null
                 ? `${last.hospitalPp >= 0 ? "+" : ""}${last.hospitalPp.toFixed(2)} pp`
                 : "—"}
             </div>
           </div>
-          <div>
-            <div style={{ fontSize: "0.68rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 600 }}>
-              Affordability-proxy gap
-            </div>
-            <div style={{ fontSize: "1.3rem", fontWeight: 600, color: "var(--chart-brick)", fontVariantNumeric: "tabular-nums" }}>
-              {last?.gapPp != null
-                ? `${last.gapPp >= 0 ? "+" : ""}${last.gapPp.toFixed(2)} pp`
-                : "—"}
-            </div>
-            <div style={{ fontSize: "0.75rem", color: "var(--muted)" }}>
-              Extras minus hospital — widened monotonically since the baseline.
-            </div>
-          </div>
         </div>
       </div>
+      <p className="chart-source">
+        Source: APRA Private Health Insurance Membership Trends; ABS Estimated Resident
+        Population (denominator). Note: Mid Blue line is the gap (extras − hospital); hospital
+        and extras are plotted as supporting series in Slate and Mid Grey.
+      </p>
     </div>
   );
 }

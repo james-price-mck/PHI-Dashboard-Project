@@ -9,6 +9,18 @@ type KpiTileProps = {
   };
 };
 
+function directionSrLabel(direction: "up" | "down" | "neutral"): string {
+  if (direction === "up") return "up";
+  if (direction === "down") return "down";
+  return "no change";
+}
+
+function directionGlyph(direction: "up" | "down" | "neutral"): string {
+  if (direction === "up") return "\u2191";
+  if (direction === "down") return "\u2193";
+  return "\u2014";
+}
+
 export function KpiTile({ label, value, sub, delta, variant = "default" }: KpiTileProps) {
   return (
     <div className={`kpi${variant === "tier" ? " kpi--tier" : ""}`}>
@@ -20,7 +32,14 @@ export function KpiTile({ label, value, sub, delta, variant = "default" }: KpiTi
             delta.direction === "up" ? "up" : delta.direction === "down" ? "down" : ""
           }`}
         >
-          {delta.direction === "up" ? "↑" : delta.direction === "down" ? "↓" : "—"}{" "}
+          {delta.direction !== "neutral" ? (
+            <>
+              <span aria-hidden="true">{directionGlyph(delta.direction)}</span>
+              <span className="sr-only">{directionSrLabel(delta.direction)}</span>
+            </>
+          ) : (
+            <span aria-hidden="true">{directionGlyph(delta.direction)}</span>
+          )}{" "}
           {delta.text}
         </div>
       )}

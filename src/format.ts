@@ -24,6 +24,22 @@ export function yyyymmdd(iso: string): string {
   return iso.slice(0, 10);
 }
 
+/**
+ * Render an Australian financial-year string with an en-dash.
+ * Accepts either "2024-25" (hyphen, as published by the ATO) or
+ * "2024–25" (already en-dashed) and normalises to "2024–25".
+ */
+export function fmtFinancialYear(fy: string | null | undefined): string {
+  if (!fy) return "—";
+  return fy.replace(/-/g, "\u2013");
+}
+
+/** Australian dollars, rounded, with A$ prefix for first-mention clarity. */
+export function fmtAud(n: number | null | undefined): string {
+  if (n == null || Number.isNaN(n)) return "—";
+  return `A$${n.toLocaleString("en-AU", { maximumFractionDigits: 0 })}`;
+}
+
 /** Expanded jurisdiction labels for readability (APRA column keys). */
 export const JURISDICTION_DISPLAY: Record<string, string> = {
   NSW_ACT: "New South Wales & ACT",

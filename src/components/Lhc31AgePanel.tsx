@@ -30,10 +30,12 @@ type Props = {
 
 const BANDS = ["25-29", "30-34", "35-39"] as const;
 
-const BAND_META: Record<(typeof BANDS)[number], { label: string; color: string }> = {
-  "25-29": { label: "25–29 (ABD discount)", color: "var(--chart-blue-3)" },
-  "30-34": { label: "30–34 (LHC threshold)", color: "var(--chart-brick)" },
-  "35-39": { label: "35–39", color: "var(--ink)" },
+type BandMeta = { label: string; color: string; strokeWidth: number };
+
+const BAND_META: Record<(typeof BANDS)[number], BandMeta> = {
+  "25-29": { label: "25–29 (ABD discount)", color: "var(--mid-grey)", strokeWidth: 1.6 },
+  "30-34": { label: "30–34 (LHC threshold)", color: "var(--mid-blue)", strokeWidth: 2.6 },
+  "35-39": { label: "35–39", color: "var(--light-grey)", strokeWidth: 1.6 },
 };
 
 const tooltipStyle = {
@@ -68,9 +70,22 @@ export function Lhc31AgePanel({ ageQuarters, latestQuarter, baselineQuarter }: P
   );
 
   const row30_34 = shortfallRows.find((r) => r.band === "30-34");
+  const first = chartRows[0];
+  const last = chartRows.at(-1);
+  const baselineLabel = shortQuarterLabel(baselineQuarter);
 
   return (
     <div className="chart-panel" style={{ marginTop: 12 }} role="region" aria-label="LHC-31 puzzle panel">
+      <div className="chart-toolbar-row">
+        <span className="muted" style={{ fontSize: "0.75rem" }}>
+          30–34 coverage fell despite LHC loading
+        </span>
+        {first && last && (
+          <span className="chart-daterange">
+            {first.label} – {last.label}
+          </span>
+        )}
+      </div>
       <div style={{ display: "flex", gap: 16, alignItems: "stretch", flexWrap: "wrap" }}>
         <div style={{ flex: "1 1 420px", minWidth: 0, height: 280 }}>
           <ResponsiveContainer width="100%" height={280}>
@@ -78,12 +93,12 @@ export function Lhc31AgePanel({ ageQuarters, latestQuarter, baselineQuarter }: P
               <CartesianGrid stroke="var(--grid)" vertical={false} />
               <XAxis
                 dataKey="label"
-                tick={{ fill: "var(--muted)", fontSize: 10 }}
+                tick={{ fill: "var(--slate)", fontSize: 11 }}
                 minTickGap={24}
               />
               <YAxis
                 tickFormatter={(v: number) => `${(v * 100).toFixed(0)}%`}
-                tick={{ fill: "var(--muted)", fontSize: 10 }}
+                tick={{ fill: "var(--slate)", fontSize: 11 }}
                 domain={[0.2, 0.5]}
                 width={42}
               />
@@ -101,30 +116,41 @@ export function Lhc31AgePanel({ ageQuarters, latestQuarter, baselineQuarter }: P
                 }}
               />
               <ReferenceLine
-                x={shortQuarterLabel(baselineQuarter)}
-                stroke="var(--muted)"
+                x={baselineLabel}
+                stroke="var(--slate)"
                 strokeDasharray="3 3"
                 strokeOpacity={0.6}
                 label={{
                   value: "Baseline",
                   position: "top",
-                  fill: "var(--muted)",
-                  fontSize: 9,
+                  fill: "var(--slate)",
+                  fontSize: 10,
                 }}
               />
-              {BANDS.map((b) => (
+              {/* Render supporting bands first; accent 30–34 on top. */}
+              {(["25-29", "35-39"] as const).map((b) => (
                 <Line
                   key={b}
                   type="monotone"
                   dataKey={b}
                   name={BAND_META[b].label}
                   stroke={BAND_META[b].color}
-                  strokeWidth={2.4}
+                  strokeWidth={BAND_META[b].strokeWidth}
                   dot={false}
                   connectNulls
                   isAnimationActive={false}
                 />
               ))}
+              <Line
+                type="monotone"
+                dataKey="30-34"
+                name={BAND_META["30-34"].label}
+                stroke={BAND_META["30-34"].color}
+                strokeWidth={BAND_META["30-34"].strokeWidth}
+                dot={false}
+                connectNulls
+                isAnimationActive={false}
+              />
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -138,39 +164,82 @@ export function Lhc31AgePanel({ ageQuarters, latestQuarter, baselineQuarter }: P
             paddingTop: 12,
           }}
         >
-          <div style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted)", fontWeight: 700 }}>
-            LHC-31 puzzle · 30–34
+          <div
+            style={{
+              fontSize: 10,
+              textTransform: "uppercase",
+              letterSpacing: "0.08em",
+              color: "var(--slate)",
+              fontWeight: 700,
+            }}
+          >
+            30–34 band
           </div>
           <div>
-            <div style={{ fontSize: "0.68rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 600 }}>
+            <div
+              style={{
+                fontSize: "0.7rem",
+                color: "var(--slate)",
+                textTransform: "uppercase",
+                letterSpacing: "0.06em",
+                fontWeight: 600,
+              }}
+            >
               Coverage rate (30–34)
             </div>
-            <div style={{ fontSize: "1.3rem", fontWeight: 600, color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>
+            <div
+              style={{
+                fontSize: "1.3rem",
+                fontWeight: 600,
+                color: "var(--ink)",
+                fontVariantNumeric: "tabular-nums",
+              }}
+            >
               {row30_34?.coverageThen != null ? `${(row30_34.coverageThen * 100).toFixed(1)}%` : "—"}
               {" → "}
               {row30_34?.coverageNow != null ? `${(row30_34.coverageNow * 100).toFixed(1)}%` : "—"}
             </div>
-            <div style={{ fontSize: "0.75rem", color: "var(--muted)" }}>
+            <div style={{ fontSize: "0.75rem", color: "var(--slate)" }}>
               {row30_34?.coverageDeltaPp != null
-                ? `${row30_34.coverageDeltaPp >= 0 ? "+" : ""}${row30_34.coverageDeltaPp.toFixed(1)} pp since ${shortQuarterLabel(baselineQuarter)}`
+                ? `${row30_34.coverageDeltaPp >= 0 ? "+" : ""}${row30_34.coverageDeltaPp.toFixed(1)} pp since ${baselineLabel}`
                 : ""}
             </div>
           </div>
           <div>
-            <div style={{ fontSize: "0.68rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 600 }}>
+            <div
+              style={{
+                fontSize: "0.7rem",
+                color: "var(--slate)",
+                textTransform: "uppercase",
+                letterSpacing: "0.06em",
+                fontWeight: 600,
+              }}
+            >
               Shortfall vs baseline rate
             </div>
-            <div style={{ fontSize: "1.3rem", fontWeight: 600, color: "var(--chart-brick)", fontVariantNumeric: "tabular-nums" }}>
+            <div
+              style={{
+                fontSize: "1.3rem",
+                fontWeight: 600,
+                color: "var(--mid-blue)",
+                fontVariantNumeric: "tabular-nums",
+              }}
+            >
               {row30_34?.shortfallPersons != null
                 ? `~${fmtInt(Math.round(row30_34.shortfallPersons / 1000) * 1000)} people`
                 : "—"}
             </div>
-            <div style={{ fontSize: "0.75rem", color: "var(--muted)" }}>
-              30–34s missing from hospital cover if the {shortQuarterLabel(baselineQuarter)} rate had held.
+            <div style={{ fontSize: "0.75rem", color: "var(--slate)" }}>
+              30–34s missing from hospital cover if the {baselineLabel} rate had held.
             </div>
           </div>
         </div>
       </div>
+      <p className="chart-source">
+        Source: APRA Membership and Benefits (AgeCohort_HT); ABS Estimated Resident Population.
+        Note: 30–34 is the insight series (Mid Blue); 25–29 and 35–39 are supporting context.
+        Shortfall counterfactual uses the {baselineLabel} coverage rate × latest population.
+      </p>
     </div>
   );
 }

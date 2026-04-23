@@ -77,23 +77,30 @@ export function TierQuarterlyChart({ data }: Props) {
     >
       <div className="chart-toolbar-row">
         <span className="muted" style={{ fontSize: "0.75rem" }}>
-          Hospital cover — product tier
+          Hospital cover — product-tier mix
         </span>
-        <div className="segmented" role="group" aria-label="Tier chart mode">
-          <button
-            type="button"
-            aria-pressed={mode === "share"}
-            onClick={() => setMode("share")}
-          >
-            Share
-          </button>
-          <button
-            type="button"
-            aria-pressed={mode === "levels"}
-            onClick={() => setMode("levels")}
-          >
-            People covered
-          </button>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+          {rows.length > 0 && (
+            <span className="chart-daterange">
+              {rows[0].quarter} – {rows[rows.length - 1].quarter}
+            </span>
+          )}
+          <div className="segmented" role="group" aria-label="Tier chart mode">
+            <button
+              type="button"
+              aria-pressed={mode === "share"}
+              onClick={() => setMode("share")}
+            >
+              Share
+            </button>
+            <button
+              type="button"
+              aria-pressed={mode === "levels"}
+              onClick={() => setMode("levels")}
+            >
+              People covered
+            </button>
+          </div>
         </div>
       </div>
 
@@ -103,11 +110,11 @@ export function TierQuarterlyChart({ data }: Props) {
           {mode === "share" ? (
             <AreaChart data={rows} margin={{ top: 8, right: 16, bottom: 16, left: 4 }}>
               <CartesianGrid stroke="var(--grid)" vertical={false} />
-              <XAxis dataKey="quarter" minTickGap={24} tick={{ fill: "var(--muted)", fontSize: 10 }} />
+              <XAxis dataKey="quarter" minTickGap={24} tick={{ fill: "var(--slate)", fontSize: 11 }} />
               <YAxis
                 tickFormatter={(v: number) => `${Math.round(v * 100)}%`}
                 domain={[0, 1]}
-                tick={{ fill: "var(--muted)", fontSize: 10 }}
+                tick={{ fill: "var(--slate)", fontSize: 11 }}
                 width={40}
               />
               <Tooltip
@@ -138,8 +145,9 @@ export function TierQuarterlyChart({ data }: Props) {
                   dataKey={t.label}
                   stackId="1"
                   stroke={t.color}
+                  strokeWidth={1.5}
                   fill={t.color}
-                  fillOpacity={t.key === "other" ? 0.35 : 0.85}
+                  fillOpacity={t.key === "other" ? 0.35 : 0.75}
                   isAnimationActive={false}
                 />
               ))}
@@ -147,12 +155,12 @@ export function TierQuarterlyChart({ data }: Props) {
           ) : (
             <LineChart data={rows} margin={{ top: 8, right: 16, bottom: 16, left: 4 }}>
               <CartesianGrid stroke="var(--grid)" vertical={false} />
-              <XAxis dataKey="quarter" minTickGap={24} tick={{ fill: "var(--muted)", fontSize: 10 }} />
+              <XAxis dataKey="quarter" minTickGap={24} tick={{ fill: "var(--slate)", fontSize: 11 }} />
               <YAxis
                 tickFormatter={(v: number) =>
                   v >= 1_000_000 ? `${(v / 1_000_000).toFixed(1)}M` : v.toLocaleString()
                 }
-                tick={{ fill: "var(--muted)", fontSize: 10 }}
+                tick={{ fill: "var(--slate)", fontSize: 11 }}
                 width={44}
               />
               <Tooltip
@@ -243,6 +251,11 @@ export function TierQuarterlyChart({ data }: Props) {
         </div>
       )}
       </div>
+      <p className="chart-source">
+        Source: Department of Health, Disability and Ageing — PHI Reform Data Quarterly Trends
+        Report (HT by Product Tier). Note: Legacy is the pre-reform product set tapering to zero
+        over 2019–2020; the stable mix reads cleanly from 2020 Q2 onward.
+      </p>
     </div>
   );
 }

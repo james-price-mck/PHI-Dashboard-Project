@@ -35,20 +35,34 @@ export function TierGoldShareChart({
     gold: t.share.gold,
   }));
 
+  const first = rows[0];
+  const last = rows.at(-1);
+  const baselineLabel = shortQuarterLabel(baselineQuarter);
+
   return (
     <div
       className="chart-panel"
       role="img"
-      aria-label="Gold share of hospital cover persons from twenty twenty quarter two onward."
+      aria-label={`Gold share of hospital cover from ${baselineLabel} onward.`}
     >
+      <div className="chart-toolbar-row">
+        <span className="muted" style={{ fontSize: "0.75rem" }}>
+          Gold — share of hospital cover
+        </span>
+        {first && last && (
+          <span className="chart-daterange">
+            {first.label} – {last.label}
+          </span>
+        )}
+      </div>
       <ResponsiveContainer width="100%" height={260}>
         <LineChart data={rows} margin={{ top: 8, right: 8, left: 0, bottom: 8 }}>
           <CartesianGrid stroke="var(--grid)" vertical={false} />
-          <XAxis dataKey="label" minTickGap={20} tick={{ fill: "var(--muted)", fontSize: 9 }} />
+          <XAxis dataKey="label" minTickGap={20} tick={{ fill: "var(--slate)", fontSize: 11 }} />
           <YAxis
             domain={[0.2, 0.45]}
             tickFormatter={(v) => `${(v * 100).toFixed(0)}%`}
-            tick={{ fill: "var(--muted)", fontSize: 10 }}
+            tick={{ fill: "var(--slate)", fontSize: 11 }}
             width={40}
           />
           <Tooltip
@@ -64,12 +78,17 @@ export function TierGoldShareChart({
             dataKey="gold"
             name="Gold"
             stroke="var(--tier-gold)"
-            strokeWidth={2.8}
+            strokeWidth={2.6}
             dot={false}
             isAnimationActive={false}
           />
         </LineChart>
       </ResponsiveContainer>
+      <p className="chart-source">
+        Source: Department of Health, Disability and Ageing — PHI Reform Data Quarterly Trends
+        Report (HT by Product Tier). Note: Share of people with hospital cover on Gold tier,
+        stable-tier window only.
+      </p>
     </div>
   );
 }

@@ -66,20 +66,29 @@ export function PremiumRoundBarChart({ data }: { data: PremiumTierData }) {
       role="img"
       aria-label="Premium increases by tier for the April 2025 and April 2026 rounds, with industry-average reference lines. Gold rose about thirteen percent in both rounds, well above the industry average."
     >
-      <ResponsiveContainer width="100%" height={280}>
-        <BarChart data={rows} margin={{ top: 16, right: 24, left: 0, bottom: 24 }} barGap={4}>
-          <CartesianGrid stroke="var(--grid)" vertical={false} />
+      <div className="chart-toolbar-row">
+        <span className="muted" style={{ fontSize: "0.75rem" }}>
+          Premium round — % increase by tier
+        </span>
+        <span className="chart-daterange">Apr 2025 &amp; Apr 2026</span>
+      </div>
+      <ResponsiveContainer width="100%" height={300}>
+        <BarChart data={rows} margin={{ top: 24, right: 120, left: 0, bottom: 16 }} barGap={4}>
+          {/* Gridlines suppressed: every bar carries a data label. */}
+          <CartesianGrid stroke="var(--grid)" horizontal={false} vertical={false} />
           <XAxis
             dataKey="tier"
-            tick={{ fill: "var(--ink)", fontSize: 12 }}
+            tick={{ fill: "var(--ink)", fontSize: 12, fontWeight: 500 }}
             tickLine={false}
             axisLine={{ stroke: "var(--rule)" }}
           />
           <YAxis
-            tick={{ fill: "var(--muted)", fontSize: 10 }}
+            tick={{ fill: "var(--slate)", fontSize: 11 }}
             tickFormatter={(v) => `${v}%`}
             width={40}
             domain={[-2, 15]}
+            axisLine={false}
+            tickLine={false}
           />
           <Tooltip
             contentStyle={tooltipStyle}
@@ -90,14 +99,16 @@ export function PremiumRoundBarChart({ data }: { data: PremiumTierData }) {
             }}
           />
           <Legend
-            wrapperStyle={{ fontSize: 11 }}
+            verticalAlign="top"
+            align="right"
+            wrapperStyle={{ fontSize: 11, paddingBottom: 8 }}
             payload={[
-              { value: "April 2025 round", type: "square", color: "var(--chart-blue-3)", id: "r25" },
-              { value: "April 2026 round", type: "square", color: "var(--accent-2)", id: "r26" },
+              { value: "April 2025 round", type: "square", color: "var(--light-grey)", id: "r25" },
+              { value: "April 2026 round", type: "square", color: "var(--mid-blue)", id: "r26" },
               {
                 value: "Industry average (DoH)",
                 type: "line",
-                color: "var(--chart-ink-muted)",
+                color: "var(--slate)",
                 id: "ind",
               },
             ]}
@@ -105,13 +116,13 @@ export function PremiumRoundBarChart({ data }: { data: PremiumTierData }) {
           {ind2025 != null && (
             <ReferenceLine
               y={ind2025}
-              stroke="var(--chart-ink-muted)"
+              stroke="var(--slate)"
               strokeDasharray="4 4"
               ifOverflow="extendDomain"
               label={{
-                value: `2025 industry avg +${ind2025.toFixed(2)}%`,
+                value: `2025 industry avg +${ind2025.toFixed(1)}%`,
                 position: "right",
-                fill: "var(--chart-ink-muted)",
+                fill: "var(--slate)",
                 fontSize: 10,
               }}
             />
@@ -119,13 +130,13 @@ export function PremiumRoundBarChart({ data }: { data: PremiumTierData }) {
           {ind2026 != null && (
             <ReferenceLine
               y={ind2026}
-              stroke="var(--chart-ink-muted)"
+              stroke="var(--slate)"
               strokeDasharray="2 4"
               ifOverflow="extendDomain"
               label={{
-                value: `2026 industry avg +${ind2026.toFixed(2)}%`,
+                value: `2026 industry avg +${ind2026.toFixed(1)}%`,
                 position: "insideRight",
-                fill: "var(--chart-ink-muted)",
+                fill: "var(--slate)",
                 fontSize: 10,
               }}
             />
@@ -133,7 +144,7 @@ export function PremiumRoundBarChart({ data }: { data: PremiumTierData }) {
           <Bar
             dataKey="round2025"
             name="April 2025 round"
-            fill="var(--chart-blue-3)"
+            fill="var(--light-grey)"
             radius={[2, 2, 0, 0]}
             isAnimationActive={false}
           >
@@ -141,13 +152,13 @@ export function PremiumRoundBarChart({ data }: { data: PremiumTierData }) {
               dataKey="round2025"
               position="top"
               formatter={formatPctLabel}
-              style={{ fill: "var(--ink)", fontSize: 10 }}
+              style={{ fill: "var(--slate)", fontSize: 10, fontWeight: 500 }}
             />
           </Bar>
           <Bar
             dataKey="round2026"
             name="April 2026 round"
-            fill="var(--accent-2)"
+            fill="var(--mid-blue)"
             radius={[2, 2, 0, 0]}
             isAnimationActive={false}
           >
@@ -155,16 +166,16 @@ export function PremiumRoundBarChart({ data }: { data: PremiumTierData }) {
               dataKey="round2026"
               position="top"
               formatter={formatPctLabel}
-              style={{ fill: "var(--ink)", fontSize: 10 }}
+              style={{ fill: "var(--ink)", fontSize: 10, fontWeight: 600 }}
             />
           </Bar>
         </BarChart>
       </ResponsiveContainer>
-      <p className="muted" style={{ marginTop: 8, fontSize: "0.75rem" }}>
-        Per-tier premium increases for the April 2025 and April 2026 premium rounds (CHOICE
-        analysis of the big-five insurers: Bupa, HCF, HBF, Medibank, NIB). Industry-average
-        reference lines are the DoH-published weighted averages for the same rounds. These are
-        the only two rounds with credible per-tier public estimates.
+      <p className="chart-source">
+        Source: CHOICE analysis of big-five insurers — Bupa, HCF, HBF, Medibank, NIB — for the
+        April 2025 and April 2026 premium rounds; Department of Health, Disability and Ageing for
+        industry-weighted averages. Note: These are the only two rounds with credible per-tier
+        public estimates; earlier years show only the DoH industry average.
       </p>
     </div>
   );

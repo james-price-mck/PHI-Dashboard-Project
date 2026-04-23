@@ -3,7 +3,7 @@ import {
   Area,
   CartesianGrid,
   ComposedChart,
-  Legend,
+  Label,
   Line,
   ReferenceLine,
   ResponsiveContainer,
@@ -11,7 +11,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { fmtInt } from "../format";
+import { fmtFinancialYear, fmtInt } from "../format";
 import {
   buildMlsCurve,
   computeBasicTierGrowth,
@@ -38,7 +38,7 @@ const MAX_INCOME = 250000;
 const STEP = 1000;
 
 function formatAud(v: number): string {
-  return `$${Math.round(v).toLocaleString("en-AU")}`;
+  return `A$${Math.round(v).toLocaleString("en-AU")}`;
 }
 
 export function MlsTaxFloorChart({ policy, tierSeries }: Props) {
@@ -66,18 +66,26 @@ export function MlsTaxFloorChart({ policy, tierSeries }: Props) {
     [tierSeries],
   );
 
+  const fyLabel = fmtFinancialYear(policy.mls.financial_year);
+
   return (
     <div
       className="chart-panel chart-panel--tall"
       role="img"
-      aria-label="MLS cost vs Basic hospital premium across singles income. Shaded region shows where the surcharge exceeds the policy."
+      aria-label="MLS payable vs Basic hospital premium across singles income. Shaded region shows where the surcharge exceeds the Basic premium."
     >
+      <div className="chart-toolbar-row">
+        <span className="muted" style={{ fontSize: "0.75rem" }}>
+          MLS payable vs Basic hospital premium — singles, FY {fyLabel}
+        </span>
+        <span className="chart-daterange">FY {fyLabel}</span>
+      </div>
       <div style={{ display: "flex", gap: 16, alignItems: "stretch", flexWrap: "wrap" }}>
         <div style={{ flex: "1 1 420px", minWidth: 0, height: 340 }}>
           <ResponsiveContainer width="100%" height={340}>
             <ComposedChart
               data={rows}
-              margin={{ top: 16, right: 16, left: 4, bottom: 8 }}
+              margin={{ top: 24, right: 16, left: 8, bottom: 8 }}
             >
               <CartesianGrid stroke="var(--grid)" vertical={false} />
               <XAxis
@@ -85,14 +93,29 @@ export function MlsTaxFloorChart({ policy, tierSeries }: Props) {
                 type="number"
                 domain={[MIN_INCOME, MAX_INCOME]}
                 tickFormatter={(v: number) => `$${Math.round(v / 1000)}k`}
-                tick={{ fill: "var(--muted)", fontSize: 10 }}
+                tick={{ fill: "var(--slate)", fontSize: 11 }}
                 minTickGap={30}
-              />
+              >
+                <Label
+                  value="Singles income (AUD)"
+                  position="insideBottom"
+                  offset={-4}
+                  style={{ fill: "var(--slate)", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.06em" }}
+                />
+              </XAxis>
               <YAxis
                 tickFormatter={(v: number) => `$${(v / 1000).toFixed(1)}k`}
-                tick={{ fill: "var(--muted)", fontSize: 10 }}
-                width={54}
-              />
+                tick={{ fill: "var(--slate)", fontSize: 11 }}
+                width={58}
+              >
+                <Label
+                  value="AUD per year"
+                  angle={-90}
+                  position="insideLeft"
+                  offset={18}
+                  style={{ fill: "var(--slate)", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.06em" }}
+                />
+              </YAxis>
               <Tooltip
                 contentStyle={tooltipStyle}
                 labelFormatter={(v) =>
@@ -103,14 +126,13 @@ export function MlsTaxFloorChart({ policy, tierSeries }: Props) {
                   return [formatAud(val), name];
                 }}
               />
-              <Legend wrapperStyle={{ fontSize: 11 }} />
               <Area
                 type="stepAfter"
                 dataKey="savingsIfBasic"
                 name="Saved by holding Basic"
                 stroke="none"
-                fill="var(--accent-2)"
-                fillOpacity={0.12}
+                fill="var(--sky)"
+                fillOpacity={0.1}
                 isAnimationActive={false}
                 legendType="none"
                 activeDot={false}
@@ -119,7 +141,7 @@ export function MlsTaxFloorChart({ policy, tierSeries }: Props) {
                 type="stepAfter"
                 dataKey="mlsAud"
                 name="MLS payable (no hospital cover)"
-                stroke="var(--chart-brick)"
+                stroke="var(--navy)"
                 strokeWidth={2.4}
                 dot={false}
                 isAnimationActive={false}
@@ -127,8 +149,8 @@ export function MlsTaxFloorChart({ policy, tierSeries }: Props) {
               <Line
                 type="monotone"
                 dataKey="basicAud"
-                name={`Representative Basic premium (~$${basic.toLocaleString("en-AU")})`}
-                stroke="var(--ink)"
+                name={`Basic premium (~A$${basic.toLocaleString("en-AU")})`}
+                stroke="var(--mid-blue)"
                 strokeWidth={2}
                 strokeDasharray="6 4"
                 dot={false}
@@ -137,12 +159,12 @@ export function MlsTaxFloorChart({ policy, tierSeries }: Props) {
               {breakeven.breakevenIncomeAud != null && (
                 <ReferenceLine
                   x={breakeven.breakevenIncomeAud}
-                  stroke="var(--accent-2)"
+                  stroke="var(--mid-blue)"
                   strokeDasharray="3 3"
                   label={{
                     value: `Breakeven ~${formatAud(breakeven.breakevenIncomeAud)}`,
                     position: "top",
-                    fill: "var(--accent-2)",
+                    fill: "var(--mid-blue)",
                     fontSize: 10,
                   }}
                 />
@@ -160,32 +182,72 @@ export function MlsTaxFloorChart({ policy, tierSeries }: Props) {
             paddingTop: 12,
           }}
         >
-          <div style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted)", fontWeight: 700 }}>
-            FY {policy.mls.financial_year} · singles
+          <div
+            style={{
+              fontSize: 10,
+              textTransform: "uppercase",
+              letterSpacing: "0.08em",
+              color: "var(--slate)",
+              fontWeight: 700,
+            }}
+          >
+            FY {fyLabel} · singles
           </div>
           <div>
-            <div className="label" style={{ fontSize: "0.68rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 600 }}>
+            <div
+              className="label"
+              style={{
+                fontSize: "0.7rem",
+                color: "var(--slate)",
+                textTransform: "uppercase",
+                letterSpacing: "0.06em",
+                fontWeight: 600,
+              }}
+            >
               Breakeven income
             </div>
-            <div style={{ fontSize: "1.35rem", fontWeight: 600, color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>
+            <div
+              style={{
+                fontSize: "1.4rem",
+                fontWeight: 600,
+                color: "var(--mid-blue)",
+                fontVariantNumeric: "tabular-nums",
+              }}
+            >
               {breakeven.breakevenIncomeAud != null
                 ? formatAud(breakeven.breakevenIncomeAud)
                 : "—"}
             </div>
-            <div style={{ fontSize: "0.75rem", color: "var(--muted)" }}>
+            <div style={{ fontSize: "0.75rem", color: "var(--slate)" }}>
               Above this income, Basic is cheaper than paying the MLS.
             </div>
           </div>
           <div>
-            <div className="label" style={{ fontSize: "0.68rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: 600 }}>
-              Basic tier persons
+            <div
+              className="label"
+              style={{
+                fontSize: "0.7rem",
+                color: "var(--slate)",
+                textTransform: "uppercase",
+                letterSpacing: "0.06em",
+                fontWeight: 600,
+              }}
+            >
+              Basic tier people
             </div>
-            <div style={{ fontSize: "1.15rem", fontWeight: 600, color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>
+            <div
+              style={{
+                fontSize: "1.15rem",
+                fontWeight: 600,
+                color: "var(--ink)",
+                fontVariantNumeric: "tabular-nums",
+              }}
+            >
               {basicGrowth.personsThen != null ? fmtInt(basicGrowth.personsThen) : "—"}
               {" → "}
               {basicGrowth.personsNow != null ? fmtInt(basicGrowth.personsNow) : "—"}
             </div>
-            <div style={{ fontSize: "0.75rem", color: "var(--muted)" }}>
+            <div style={{ fontSize: "0.75rem", color: "var(--slate)" }}>
               {basicGrowth.pctChange != null
                 ? `${basicGrowth.pctChange >= 0 ? "+" : ""}${basicGrowth.pctChange.toFixed(0)}% since 2020 Q2`
                 : ""}
@@ -196,6 +258,13 @@ export function MlsTaxFloorChart({ policy, tierSeries }: Props) {
           </div>
         </div>
       </div>
+      <p className="chart-source">
+        Source: ATO Medicare Levy Surcharge thresholds (FY {fyLabel}); PrivateHealth.gov.au Basic
+        hospital policies (representative national midpoint). Note: Navy line is the MLS payable
+        with no hospital cover; Mid Blue dashed line is a representative cheapest Basic premium;
+        shaded Sky area shows the savings from holding Basic instead of paying MLS. Actual
+        cheapest Basic products vary by state and insurer.
+      </p>
     </div>
   );
 }

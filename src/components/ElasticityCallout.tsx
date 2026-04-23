@@ -1,3 +1,4 @@
+import { useId } from "react";
 import { fmtInt } from "../format";
 import type { GoldElasticity } from "../insights";
 
@@ -14,6 +15,7 @@ function signed(n: number | null, digits = 1): string {
 }
 
 export function ElasticityCallout({ elasticity, baselineLabel, latestLabel }: Props) {
+  const headingId = useId();
   const {
     deltaQuantityPct,
     deltaPricePct,
@@ -27,39 +29,52 @@ export function ElasticityCallout({ elasticity, baselineLabel, latestLabel }: Pr
   const revenueUpliftPct =
     revenueIndex != null ? (revenueIndex - 1) * 100 : null;
 
-  const elasticityText =
-    e != null
-      ? `${e.toFixed(2)}`
-      : "—";
+  const elasticityText = e != null ? `${e.toFixed(2)}` : "—";
 
   const elasticityHint =
     e != null
       ? Math.abs(e) < 1
-        ? "inelastic — price-setting power"
-        : "elastic"
+        ? "Inelastic — price-setting power"
+        : "Elastic"
       : undefined;
 
   return (
-    <div className="callout-box" aria-label="Price elasticity of Gold demand">
-      <p style={{ fontWeight: 700, margin: 0, marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.06em", fontSize: "0.72rem", color: "var(--accent-2)" }}>
-        Back-of-envelope · price-setting power
-      </p>
+    <div
+      className="callout-box"
+      role="region"
+      aria-labelledby={headingId}
+    >
+      <h3
+        id={headingId}
+        style={{
+          fontFamily: "var(--font-sans)",
+          fontWeight: 700,
+          margin: 0,
+          marginBottom: 8,
+          textTransform: "uppercase",
+          letterSpacing: "0.08em",
+          fontSize: "0.72rem",
+          color: "var(--mid-blue)",
+        }}
+      >
+        Price-setting power — inelastic Gold demand
+      </h3>
       <div className="stat-grid" role="group" aria-label="Gold elasticity stats">
         <div className="stat">
-          <div className="label">ΔP Gold (5y)</div>
+          <div className="label">Gold price change (5y)</div>
           <div className="value">{signed(deltaPricePct, 0)}%</div>
           <div className="hint">
-            vs industry avg {signed(industryAvgPct, 0)}% over the same window
+            Industry average {signed(industryAvgPct, 0)}% over the same window.
           </div>
         </div>
         <div className="stat">
           <div className="label">
-            ΔQ Gold ({baselineLabel} → {latestLabel})
+            Gold members — change ({baselineLabel} → {latestLabel})
           </div>
           <div className="value">{signed(deltaQuantityPct, 1)}%</div>
           <div className="hint">
             {goldPersonsThen != null && goldPersonsNow != null
-              ? `${fmtInt(goldPersonsThen)} → ${fmtInt(goldPersonsNow)} people on Gold`
+              ? `${fmtInt(goldPersonsThen)} → ${fmtInt(goldPersonsNow)} people on Gold.`
               : ""}
           </div>
         </div>
@@ -69,18 +84,17 @@ export function ElasticityCallout({ elasticity, baselineLabel, latestLabel }: Pr
           <div className="hint">{elasticityHint}</div>
         </div>
       </div>
-      <p style={{ margin: 0, fontSize: "0.9rem" }}>
-        Gold premium <em>revenue</em> on insured persons still rose by roughly{" "}
+      <p style={{ margin: 0, fontSize: "0.9375rem" }}>
+        Gold premium <em>revenue</em> on insured persons still rose by{" "}
         <strong>{signed(revenueUpliftPct, 0)}%</strong> over the five years — losing ~
-        {deltaQuantityPct != null ? Math.round(Math.abs(deltaQuantityPct)) : "—"}% of
-        Gold members was more than offset by the ~
-        {deltaPricePct != null ? Math.round(deltaPricePct) : "—"}% price hike.
-        Consistent with a profit-maximising response to inelastic demand.
+        {deltaQuantityPct != null ? Math.round(Math.abs(deltaQuantityPct)) : "—"}% of Gold
+        members was more than offset by the ~
+        {deltaPricePct != null ? Math.round(deltaPricePct) : "—"}% price rise. Consistent with a
+        profit-maximising response to inelastic demand.
       </p>
       <p className="muted" style={{ marginTop: 6, fontSize: "0.75rem" }}>
-        Elasticity here is a back-of-envelope aggregate partial correlation, not a
-        causal identification. Revenue ignores claims costs and product-mix
-        within-Gold, so it is a ceiling on the profit implication.
+        Back-of-envelope partial correlation, not a causal identification. Revenue ignores claims
+        costs and within-Gold product mix, so it is a ceiling on the profit read.
       </p>
     </div>
   );
