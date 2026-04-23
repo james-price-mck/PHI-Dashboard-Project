@@ -264,6 +264,154 @@ export function computeNetNewByAgeGroup(
   };
 }
 
+/**
+ * Granular age cohorts for the 1B "who's leaning in, who's leaning out" view.
+ * Each cohort corresponds to a distinct policy / lifecycle story:
+ *  - Under 25: dependants on family policies; excluded from the chart but
+ *    reported in the footnote for completeness.
+ *  - 25–29: Age-Based Discount (AYD) fully in force — rate uplift expected.
+ *  - 30–34: AYD taper begins at 31; LHC loading also activates at 31.
+ *  - 35–49: settled mid-career, family formation.
+ *  - 50–59: peak-earning band.
+ *  - 60–64: pre-retirement affordability squeeze; top of band ageing into 65+.
+ *  - 65 and over: retired; 65/70 rebate uplifts; strong preservation.
+ */
+export const COVERAGE_DELTA_COHORTS: {
+  label: string;
+  bands: string[];
+  decisionMaker: boolean;
+  /** Short rationale for tooltip / footnote. */
+  rationale: string;
+}[] = [
+  {
+    label: "Under 25",
+    bands: ["0-4", "5-9", "10-14", "15-19", "20-24"],
+    decisionMaker: false,
+    rationale: "Dependants on family policies; not independent buyers.",
+  },
+  {
+    label: "25–29",
+    bands: ["25-29"],
+    decisionMaker: true,
+    rationale: "Age-Based Discount (AYD) in force.",
+  },
+  {
+    label: "30–34",
+    bands: ["30-34"],
+    decisionMaker: true,
+    rationale: "AYD tapers from age 31; LHC loading also activates at 31.",
+  },
+  {
+    label: "35–49",
+    bands: ["35-39", "40-44", "45-49"],
+    decisionMaker: true,
+    rationale: "Settled mid-career; family formation.",
+  },
+  {
+    label: "50–59",
+    bands: ["50-54", "55-59"],
+    decisionMaker: true,
+    rationale: "Peak-earning band.",
+  },
+  {
+    label: "60–64",
+    bands: ["60-64"],
+    decisionMaker: true,
+    rationale: "Pre-retirement affordability squeeze; top of band ageing into 65+.",
+  },
+  {
+    label: "65 and over",
+    bands: ["65-69", "70-74", "75-79", "80+"],
+    decisionMaker: true,
+    rationale: "Retired; 65/70 rebate uplifts; strong preservation.",
+  },
+];
+
+export type CoverageDeltaRow = {
+  label: string;
+  decisionMaker: boolean;
+  rationale: string;
+  /** Coverage rate at baseline and latest (0–1). */
+  coverageRateThen: number | null;
+  coverageRateNow: number | null;
+  /** Change in coverage rate, in percentage points. */
+  coverageDeltaPp: number | null;
+  /** Net new insured lives in the cohort since baseline. */
+  netNew: number;
+  /** Absolute net new lives, for bar-thickness encoding. */
+  netNewAbs: number;
+  /** Cohort population at the latest quarter (for reference). */
+  populationNow: number;
+};
+
+/**
+ * Per-cohort coverage-rate change and net new insured lives since baseline.
+ * The 1B chart plots `coverageDeltaPp` on the x-axis and uses `netNewAbs` to
+ * scale bar thickness, answering two distinct questions in one view:
+ *   1. Is this cohort leaning in or out of PHI? (bar direction + length)
+ *   2. How much does that cohort contribute to total growth? (bar thickness)
+ */
+export function computeCoverageDeltaByCohort(
+  ageQuarters: AgeCoverageQuarter[],
+  baselineQuarter: string,
+  latestQuarter: string,
+): {
+  rows: CoverageDeltaRow[];
+  totalNetNew: number;
+} {
+  const qThen = ageQuarters.find((q) => q.quarter === baselineQuarter);
+  const qNow = ageQuarters.find((q) => q.quarter === latestQuarter);
+  if (!qThen || !qNow) {
+    return { rows: [], totalNetNew: 0 };
+  }
+
+  function sumInsured(q: AgeCoverageQuarter, bands: string[]) {
+    let s = 0;
+    for (const b of bands) {
+      const cell = q.bands[b];
+      if (cell) s += cell.insured_persons;
+    }
+    return s;
+  }
+  function sumPopulation(q: AgeCoverageQuarter, bands: string[]) {
+    let s = 0;
+    for (const b of bands) {
+      const cell = q.bands[b];
+      if (cell) s += cell.population;
+    }
+    return s;
+  }
+
+  let totalNetNew = 0;
+  const rows: CoverageDeltaRow[] = COVERAGE_DELTA_COHORTS.map((g) => {
+    const insThen = sumInsured(qThen, g.bands);
+    const insNow = sumInsured(qNow, g.bands);
+    const popThen = sumPopulation(qThen, g.bands);
+    const popNow = sumPopulation(qNow, g.bands);
+    const netNew = insNow - insThen;
+    totalNetNew += netNew;
+    const coverageRateThen = popThen > 0 ? insThen / popThen : null;
+    const coverageRateNow = popNow > 0 ? insNow / popNow : null;
+    const coverageDeltaPp =
+      coverageRateNow != null && coverageRateThen != null
+        ? (coverageRateNow - coverageRateThen) * 100
+        : null;
+    return {
+      label: g.label,
+      decisionMaker: g.decisionMaker,
+      rationale: g.rationale,
+      coverageRateThen,
+      coverageRateNow,
+      coverageDeltaPp,
+      netNew,
+      netNewAbs: Math.abs(netNew),
+      populationNow: popNow,
+    };
+  });
+
+  return { rows, totalNetNew };
+}
+
 export type AgeYoyCohortKey =
   | "under25"
   | "a25_34"

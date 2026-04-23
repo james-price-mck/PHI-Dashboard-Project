@@ -32,10 +32,16 @@ const BANDS = ["25-29", "30-34", "35-39"] as const;
 
 type BandMeta = { label: string; color: string; strokeWidth: number };
 
+/**
+ * Both 25–29 and 30–34 are highlighted to contrast the two sides of the story:
+ *   - 25–29 (Age-Based Discount in force) — the AYD is working.
+ *   - 30–34 (ABD tapers, LHC loading activates) — coverage is falling.
+ * 35–39 sits in the background as stable-cohort context.
+ */
 const BAND_META: Record<(typeof BANDS)[number], BandMeta> = {
-  "25-29": { label: "25–29 (ABD discount)", color: "var(--mid-grey)", strokeWidth: 1.6 },
-  "30-34": { label: "30–34 (LHC threshold)", color: "var(--mid-blue)", strokeWidth: 2.6 },
-  "35-39": { label: "35–39", color: "var(--light-grey)", strokeWidth: 1.6 },
+  "25-29": { label: "25–29 (ABD in force)", color: "var(--sky)", strokeWidth: 2.4 },
+  "30-34": { label: "30–34 (ABD tapers, LHC activates)", color: "var(--mid-blue)", strokeWidth: 2.6 },
+  "35-39": { label: "35–39 (reference)", color: "var(--mid-grey)", strokeWidth: 1.6 },
 };
 
 const tooltipStyle = {
@@ -45,6 +51,53 @@ const tooltipStyle = {
   padding: "8px 10px",
   fontSize: 12,
 };
+
+type StatCardProps = {
+  label: string;
+  rangeLabel: string;
+  deltaPp: number | null;
+  valueColor: string;
+};
+
+function StatCard({ label, rangeLabel, deltaPp, valueColor }: StatCardProps) {
+  return (
+    <div>
+      <div
+        style={{
+          fontSize: "0.7rem",
+          color: "var(--slate)",
+          textTransform: "uppercase",
+          letterSpacing: "0.06em",
+          fontWeight: 600,
+        }}
+      >
+        {label}
+      </div>
+      <div
+        style={{
+          fontSize: "1.2rem",
+          fontWeight: 600,
+          color: "var(--ink)",
+          fontVariantNumeric: "tabular-nums",
+        }}
+      >
+        {rangeLabel}
+      </div>
+      <div
+        style={{
+          fontSize: "0.8rem",
+          color: valueColor,
+          fontWeight: 600,
+          fontVariantNumeric: "tabular-nums",
+        }}
+      >
+        {deltaPp != null
+          ? `${deltaPp >= 0 ? "+" : ""}${deltaPp.toFixed(1)} pts`
+          : "—"}
+      </div>
+    </div>
+  );
+}
 
 export function Lhc31AgePanel({ ageQuarters, latestQuarter, baselineQuarter }: Props) {
   const chartRows = useMemo(() => {
@@ -69,16 +122,22 @@ export function Lhc31AgePanel({ ageQuarters, latestQuarter, baselineQuarter }: P
     [ageQuarters, baselineQuarter, latestQuarter],
   );
 
+  const row25_29 = shortfallRows.find((r) => r.band === "25-29");
   const row30_34 = shortfallRows.find((r) => r.band === "30-34");
   const first = chartRows[0];
   const last = chartRows.at(-1);
   const baselineLabel = shortQuarterLabel(baselineQuarter);
 
+  function rangeLabel(then: number | null | undefined, now: number | null | undefined): string {
+    if (then == null || now == null) return "—";
+    return `${(then * 100).toFixed(1)}% → ${(now * 100).toFixed(1)}%`;
+  }
+
   return (
-    <div className="chart-panel" style={{ marginTop: 12 }} role="region" aria-label="LHC-31 puzzle panel">
+    <div className="chart-panel" style={{ marginTop: 12 }} role="region" aria-label="LHC-31 panel: 25–29 rose under the Age-Based Discount while 30–34 fell once the discount tapered.">
       <div className="chart-toolbar-row">
         <span className="chart-title">
-          30–34 coverage fell despite LHC loading
+          25–29 rose under the Age-Based Discount; 30–34 has fallen once the discount tapers
         </span>
         {first && last && (
           <span className="chart-daterange">
@@ -127,20 +186,27 @@ export function Lhc31AgePanel({ ageQuarters, latestQuarter, baselineQuarter }: P
                   fontSize: 10,
                 }}
               />
-              {/* Render supporting bands first; accent 30–34 on top. */}
-              {(["25-29", "35-39"] as const).map((b) => (
-                <Line
-                  key={b}
-                  type="monotone"
-                  dataKey={b}
-                  name={BAND_META[b].label}
-                  stroke={BAND_META[b].color}
-                  strokeWidth={BAND_META[b].strokeWidth}
-                  dot={false}
-                  connectNulls
-                  isAnimationActive={false}
-                />
-              ))}
+              {/* Reference band first, then the two insight bands on top. */}
+              <Line
+                type="monotone"
+                dataKey="35-39"
+                name={BAND_META["35-39"].label}
+                stroke={BAND_META["35-39"].color}
+                strokeWidth={BAND_META["35-39"].strokeWidth}
+                dot={false}
+                connectNulls
+                isAnimationActive={false}
+              />
+              <Line
+                type="monotone"
+                dataKey="25-29"
+                name={BAND_META["25-29"].label}
+                stroke={BAND_META["25-29"].color}
+                strokeWidth={BAND_META["25-29"].strokeWidth}
+                dot={false}
+                connectNulls
+                isAnimationActive={false}
+              />
               <Line
                 type="monotone"
                 dataKey="30-34"
@@ -160,7 +226,7 @@ export function Lhc31AgePanel({ ageQuarters, latestQuarter, baselineQuarter }: P
             minWidth: 220,
             display: "flex",
             flexDirection: "column",
-            gap: 10,
+            gap: 12,
             paddingTop: 12,
           }}
         >
@@ -173,8 +239,20 @@ export function Lhc31AgePanel({ ageQuarters, latestQuarter, baselineQuarter }: P
               fontWeight: 700,
             }}
           >
-            30–34 band
+            Coverage rate since {baselineLabel}
           </div>
+          <StatCard
+            label="25–29 (ABD in force)"
+            rangeLabel={rangeLabel(row25_29?.coverageThen, row25_29?.coverageNow)}
+            deltaPp={row25_29?.coverageDeltaPp ?? null}
+            valueColor="var(--sky)"
+          />
+          <StatCard
+            label="30–34 (ABD tapers, LHC activates)"
+            rangeLabel={rangeLabel(row30_34?.coverageThen, row30_34?.coverageNow)}
+            deltaPp={row30_34?.coverageDeltaPp ?? null}
+            valueColor="var(--mid-blue)"
+          />
           <div>
             <div
               style={{
@@ -185,41 +263,11 @@ export function Lhc31AgePanel({ ageQuarters, latestQuarter, baselineQuarter }: P
                 fontWeight: 600,
               }}
             >
-              Coverage rate (30–34)
+              30–34 shortfall vs baseline rate
             </div>
             <div
               style={{
-                fontSize: "1.3rem",
-                fontWeight: 600,
-                color: "var(--ink)",
-                fontVariantNumeric: "tabular-nums",
-              }}
-            >
-              {row30_34?.coverageThen != null ? `${(row30_34.coverageThen * 100).toFixed(1)}%` : "—"}
-              {" → "}
-              {row30_34?.coverageNow != null ? `${(row30_34.coverageNow * 100).toFixed(1)}%` : "—"}
-            </div>
-            <div style={{ fontSize: "0.75rem", color: "var(--slate)" }}>
-              {row30_34?.coverageDeltaPp != null
-                ? `${row30_34.coverageDeltaPp >= 0 ? "+" : ""}${row30_34.coverageDeltaPp.toFixed(1)} pts since ${baselineLabel}`
-                : ""}
-            </div>
-          </div>
-          <div>
-            <div
-              style={{
-                fontSize: "0.7rem",
-                color: "var(--slate)",
-                textTransform: "uppercase",
-                letterSpacing: "0.06em",
-                fontWeight: 600,
-              }}
-            >
-              Shortfall vs baseline rate
-            </div>
-            <div
-              style={{
-                fontSize: "1.3rem",
+                fontSize: "1.2rem",
                 fontWeight: 600,
                 color: "var(--mid-blue)",
                 fontVariantNumeric: "tabular-nums",
@@ -239,8 +287,11 @@ export function Lhc31AgePanel({ ageQuarters, latestQuarter, baselineQuarter }: P
         Source: APRA Membership and Benefits (AgeCohort_HT); ABS Estimated Resident Population.
       </p>
       <p className="chart-source" style={{ marginTop: 4 }}>
-        Note: 30–34 is the insight series (Mid Blue); 25–29 and 35–39 are supporting context.
-        Shortfall counterfactual uses the {baselineLabel} coverage rate × latest population.
+        Note: 25–29 (Sky) and 30–34 (Mid Blue) are the two insight series; 35–39 (Mid Grey) is a
+        stable reference cohort. The Age-Based Discount applies to 18–29s and steps down 2 pp per
+        year from age 26; the Lifetime Health Cover loading activates at age 31 and rises 2% per
+        year of delayed take-up. The 30–34 shortfall counterfactual holds the {baselineLabel}
+        coverage rate constant and applies it to the latest 30–34 population.
       </p>
     </div>
   );

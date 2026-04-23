@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { AgeCoverageChart } from "./components/AgeCoverageChart";
 import { CoverageCombinedChart } from "./components/CoverageCombinedChart";
 import { ElasticityCallout } from "./components/ElasticityCallout";
 import { ExtrasVsHospitalGapChart } from "./components/ExtrasVsHospitalGapChart";
@@ -23,7 +22,7 @@ import {
   BASELINE_QUARTER,
   computeExtrasVsHospitalPpDivergence,
   computeGoldElasticity,
-  computeNetNewByAgeGroup,
+  computeCoverageDeltaByCohort,
   computeStateMovers,
   computeTierInsight,
   deltaPersons,
@@ -108,19 +107,24 @@ export function App() {
   const goldShareLatest = latestTier?.share.gold ?? null;
 
   const ageQuartersAll = data.age_coverage_quarterly ?? [];
-  const ageGrowth =
+
+  // Granular 7-cohort breakdown for the 1B chart: Δ coverage rate (pts) with
+  // bar-thickness encoding net new insured lives.
+  const coverageDelta =
     ageQuartersAll.length > 0
-      ? computeNetNewByAgeGroup(ageQuartersAll, BASELINE_QUARTER, latestQ)
-      : {
-          rows: [],
-          totalGrowth: 0,
-          decisionAgeGrowth: 0,
-          youngDecisionMakerGrowthSharePct: null,
-          youngDecisionMakerPopulationSharePct: null,
-          youngDecisionMakerOverIndexPp: null,
-        };
-  const ageGrowthRows = ageGrowth.rows;
-  const young25_34 = ageGrowthRows.find((r) => r.label === "25–34") ?? null;
+      ? computeCoverageDeltaByCohort(ageQuartersAll, BASELINE_QUARTER, latestQ)
+      : { rows: [], totalNetNew: 0 };
+  const coverageDeltaRows = coverageDelta.rows;
+  const cohort65 = coverageDeltaRows.find((r) => r.label === "65 and over") ?? null;
+  const cohort30_34 = coverageDeltaRows.find((r) => r.label === "30–34") ?? null;
+  const cohort60_64 = coverageDeltaRows.find((r) => r.label === "60–64") ?? null;
+  const decisionAgeNetNew = coverageDeltaRows
+    .filter((r) => r.decisionMaker)
+    .reduce((s, r) => s + r.netNew, 0);
+  const cohort65ShareOfDecisionNetNew =
+    decisionAgeNetNew > 0 && cohort65?.netNew != null
+      ? (cohort65.netNew / decisionAgeNetNew) * 100
+      : null;
 
   const extrasVsH = computeExtrasVsHospitalPpDivergence(
     data.national_quarterly,
@@ -139,12 +143,9 @@ export function App() {
 
   // Action-title copy is computed from live data so it stays accurate after each refresh.
   const growthTitle =
-    natThen?.hospitalShare != null &&
-    natNow?.hospitalShare != null &&
-    natThen?.extrasShare != null &&
-    natNow?.extrasShare != null
-      ? `Coverage has kept climbing since the 2019 reforms — hospital cover has grown from ${fmtPct(natThen.hospitalShare)}% to ${fmtPct(natNow.hospitalShare)}% of the population, and extras from ${fmtPct(natThen.extrasShare)}% to ${fmtPct(natNow.extrasShare)}%.`
-      : "Coverage has kept climbing since the 2019 reforms; hospital and extras both sit above pre-reform levels.";
+    hPct != null
+      ? `PHI coverage has climbed approximately ${Math.round(hPct)}% since the 2019 reforms.`
+      : "PHI coverage has climbed since the 2019 reforms.";
 
   const tradeDownTitle =
     tierInsight.goldShareThen != null &&
@@ -153,21 +154,15 @@ export function App() {
       ? `The market is trading down: Gold's share of hospital cover has fallen from ${fmtPct(tierInsight.goldShareThen)}% to ${fmtPct(tierInsight.goldShareNow)}% since ${baselineLabel}, with Silver and Bronze absorbing the shift.`
       : `The market is trading down from Gold toward Silver and Bronze since ${baselineLabel}.`;
 
-  // Risk-pool framing for 1B: 65+ are carrying almost all net growth while being
-  // a small share of adults; 25–34 are under-indexed. Deliberately decoupled
-  // from the tier story (see Data & methods: DoH tier mix is not
-  // cross-tabulated by age, so any tier × age link is inferred, not measured).
-  const over65Row = ageGrowthRows.find((r) => r.label === "65 and over") ?? null;
-  const growthDriverTitle =
-    over65Row?.growthSharePct != null &&
-    over65Row?.populationSharePct != null &&
-    young25_34?.growthSharePct != null &&
-    young25_34?.populationSharePct != null
-      ? `The book is ageing — 65-and-overs are ${over65Row.populationSharePct.toFixed(0)}% of adults but ${over65Row.growthSharePct.toFixed(0)}% of net new insured lives, while 25–34s are ${young25_34.populationSharePct.toFixed(0)}% of adults and just ${young25_34.growthSharePct.toFixed(0)}% of net new. The risk pool is skewing older, independent of the tier shift.`
-      : "The book is ageing — 65-and-overs are doing almost all the net growth in hospital cover; younger decision-makers are under-represented. The risk pool is skewing older, independent of the tier shift.";
+  // 1B tells a two-part story: (a) 65+ drives volume growth; (b) 30–34 and
+  // 60–64 are the only decision-age cohorts whose coverage rate has fallen.
+  // The appendix panel (3C) unpacks the 30–34 observation alongside 25–29.
+  // Deliberately decoupled from the tier story — DoH tier mix is not
+  // cross-tabulated by age, so any tier × age link is inferred, not measured.
+  const growthDriverTitle = "People aged 65 and over drive volume growth, but 30–34 and 60–64 are the only decision-age cohorts whose coverage rate has fallen.";
 
   const lhcObservationTitle =
-    "The Lifetime Health Cover loading isn't biting on the cohort it's aimed at — 30–34 coverage has fallen since baseline, even though the loading activates from age 31.";
+    "The Age-Based Discount is pulling 25–29s in; Lifetime Health Cover isn't holding 30–34s once the discount tapers.";
 
   const goldDivergenceTitle =
     goldFiveYear?.cumulative_pct != null &&
@@ -194,7 +189,11 @@ export function App() {
         <p className="lead">
           More Australians than ever hold private health cover, but are downgrading from{" "}
           <strong>Gold</strong> to <strong>Silver</strong> and <strong>Bronze</strong> hospital
-          cover as premium gaps widen and affordability concerns grow.
+          cover as premium gaps widen and affordability concerns grow. The{" "}
+          <strong>1 April 2019 reforms</strong> reclassified every hospital product into four
+          standard tiers — Gold, Silver, Bronze, Basic — with a 12-month transition before the
+          tiers became <strong>mandatory on 1 April 2020</strong>. Figures on this page are
+          anchored to <strong>2020 Q2</strong>, the first clean post-transition quarter.
         </p>
         <p className="muted" style={{ marginTop: 4 }}>
           Sources: APRA, Department of Health, Disability and Ageing, ABS, and CHOICE.
@@ -202,7 +201,7 @@ export function App() {
 
         <div className="kpi-group-header kpi-group-header--inverse">
           <p>Coverage — more people are covered</p>
-          <p>Tier mix — but trading down within hospital cover</p>
+          <p>Tier mix — trading down within hospital cover</p>
         </div>
         <div className="kpi-row kpi-row--inverse">
           <KpiTile
@@ -251,22 +250,30 @@ export function App() {
             value={goldShareLatest != null ? `${fmtPct(goldShareLatest)}%` : "—"}
             sub={
               tierInsight.goldShareThen != null && tierInsight.goldShareNow != null
-                ? `${fmtPct(tierInsight.goldShareThen)}% \u2192 ${fmtPct(tierInsight.goldShareNow)}% of hospital cover`
+                ? `${fmtPct(tierInsight.goldShareThen)}% \u2192 ${fmtPct(tierInsight.goldShareNow)}% of cover`
                 : undefined
             }
             subPlacement="above-delta"
             delta={
-              tierInsight.goldDeltaPp != null
-                ? {
-                    text: `${tierInsight.goldDeltaPp >= 0 ? "+" : ""}${tierInsight.goldDeltaPp.toFixed(1)} points since ${baselineYear}`,
-                    direction: tierInsight.goldDeltaPp <= 0 ? "down" : "up",
-                  }
+              tierInsight.goldShareThen != null &&
+              tierInsight.goldShareNow != null &&
+              tierInsight.goldShareThen > 0
+                ? (() => {
+                    const relPct =
+                      ((tierInsight.goldShareNow - tierInsight.goldShareThen) /
+                        tierInsight.goldShareThen) *
+                      100;
+                    return {
+                      text: `${relPct >= 0 ? "+" : ""}${relPct.toFixed(0)}% since ${baselineYear}`,
+                      direction: (relPct <= 0 ? "down" : "up") as "up" | "down",
+                    };
+                  })()
                 : undefined
             }
           />
           <KpiTile
             variant="tier"
-            label="Silver + Bronze share of cover"
+            label="Silver + Bronze share"
             value={
               tierInsight.silverBronzeShareNow != null
                 ? `${fmtPct(tierInsight.silverBronzeShareNow)}%`
@@ -274,16 +281,24 @@ export function App() {
             }
             sub={
               tierInsight.silverBronzeShareThen != null && tierInsight.silverBronzeShareNow != null
-                ? `${fmtPct(tierInsight.silverBronzeShareThen)}% \u2192 ${fmtPct(tierInsight.silverBronzeShareNow)}% of hospital cover`
+                ? `${fmtPct(tierInsight.silverBronzeShareThen)}% \u2192 ${fmtPct(tierInsight.silverBronzeShareNow)}% of cover`
                 : undefined
             }
             subPlacement="above-delta"
             delta={
-              tierInsight.silverBronzeDeltaPp != null
-                ? {
-                    text: `${tierInsight.silverBronzeDeltaPp >= 0 ? "+" : ""}${tierInsight.silverBronzeDeltaPp.toFixed(1)} points since ${baselineYear}`,
-                    direction: tierInsight.silverBronzeDeltaPp >= 0 ? "up" : "down",
-                  }
+              tierInsight.silverBronzeShareThen != null &&
+              tierInsight.silverBronzeShareNow != null &&
+              tierInsight.silverBronzeShareThen > 0
+                ? (() => {
+                    const relPct =
+                      ((tierInsight.silverBronzeShareNow - tierInsight.silverBronzeShareThen) /
+                        tierInsight.silverBronzeShareThen) *
+                      100;
+                    return {
+                      text: `${relPct >= 0 ? "+" : ""}${relPct.toFixed(0)}% since ${baselineYear}`,
+                      direction: (relPct >= 0 ? "up" : "down") as "up" | "down",
+                    };
+                  })()
                 : undefined
             }
           />
@@ -292,26 +307,18 @@ export function App() {
       </div>
 
       <section className="insight-group" aria-labelledby="sec-group-growth">
-        <span className="section-eyebrow">1 · Growth</span>
-        <h2 id="sec-group-growth" className="group-title">
-          Coverage is growing, led by older cohorts
+        <h2
+          id="sec-group-growth"
+          className="section-eyebrow group-heading"
+        >
+          1 · Growth
         </h2>
-        <p className="group-lead">
-          The insured population keeps expanding, but almost all of the net growth is coming from
-          65-and-overs. The book is ageing independently of the tier trade-down explored in
-          section 2.
-        </p>
 
         <section className="insight-section" aria-labelledby="sec-growth">
           <span className="section-eyebrow">1A · Growth</span>
           <h3 id="sec-growth" className="section-title">
             {growthTitle}
           </h3>
-          <p className="lead">
-            Tracking since {shortQuarterLabel(data.meta.series_start_iso)}, through the 1 April
-            2019 Gold/Silver/Bronze/Basic tier reforms and their mandatory adoption on 1 April
-            2020.
-          </p>
           <CoverageCombinedChart data={data.national_quarterly} />
         </section>
 
@@ -321,37 +328,50 @@ export function App() {
             <h3 id="sec-growth-driver" className="section-title">
               {growthDriverTitle}
             </h3>
-            <p className="insight-sub">
-              Almost all net growth in hospital cover since {baselineLabel} is concentrated in the
-              65-and-over cohort — consistent with an ageing population flowing into retirement and
-              retaining cover for chronic care and Lifetime Health Cover lock-in. 25–34
-              decision-makers, the cohort the Age-Based Discount and LHC loading are designed to
-              activate, contribute a smaller share of net growth than their share of adults would
-              suggest. This is a risk-pool observation; any link to the Gold-to-Silver/Bronze
-              trade-down in section 2A is not measurable with the data shown here (see Data
-              &amp; methods).
+            <p className="insight-sub" style={{ maxWidth: "none" }}>
+              {cohort65?.netNew != null &&
+              cohort65ShareOfDecisionNetNew != null &&
+              cohort30_34?.coverageDeltaPp != null &&
+              cohort60_64?.coverageDeltaPp != null ? (
+                <>
+                  65-and-overs account for{" "}
+                  <strong>{cohort65ShareOfDecisionNetNew.toFixed(0)}%</strong> of net new
+                  decision-age insured lives since {baselineLabel}. But within the younger bands,
+                  only <strong>30–34</strong> (coverage rate{" "}
+                  <strong>{cohort30_34.coverageDeltaPp.toFixed(1)} pts</strong>) and{" "}
+                  <strong>60–64</strong> (
+                  <strong>{cohort60_64.coverageDeltaPp.toFixed(1)} pts</strong>) have seen
+                  coverage fall — every other decision-age cohort has grown its share of insured
+                  population.
+                </>
+              ) : (
+                <>
+                  Since {baselineLabel}, 65-and-overs have driven most volume growth, while
+                  30–34 and 60–64 are the only decision-age cohorts whose coverage rate has
+                  fallen.
+                </>
+              )}
             </p>
-            <GrowthByAgeChart rows={ageGrowthRows} />
+            <GrowthByAgeChart
+              rows={coverageDeltaRows}
+              baselineQuarter={BASELINE_QUARTER}
+              latestQuarter={latestQ}
+            />
             <p className="insight-sub" style={{ marginTop: "var(--s-5)" }}>
-              The over-time view confirms the snapshot: 65+ has grown near 3% YoY throughout,
-              while 25–34 was contracting at the baseline and has only recently caught up to the
-              middle cohorts.
+              The 30–34 divergence from 25–29 — consistent with the Age-Based Discount
+              tapering from age 31 — is unpacked in the appendix below.
             </p>
-            <AgeCoverageChart data={ageQuartersAll} />
           </section>
         )}
       </section>
 
       <section className="insight-group" aria-labelledby="sec-group-tradedown">
-        <span className="section-eyebrow">2 · Trade-down</span>
-        <h2 id="sec-group-tradedown" className="group-title">
-          Households are downgrading hospital cover as premiums diverge
+        <h2
+          id="sec-group-tradedown"
+          className="section-eyebrow group-heading"
+        >
+          2 · Trade-down
         </h2>
-        <p className="group-lead">
-          Gold's share of hospital cover has fallen sharply while Silver and Bronze have
-          absorbed the shift. Above-market Gold premium rises are the proximate driver, and
-          broader affordability pressure reinforces the same behaviour.
-        </p>
 
         <section className="insight-section" aria-labelledby="sec-tier">
           <span className="section-eyebrow">2A · Market trade-down</span>
@@ -426,6 +446,106 @@ export function App() {
           </p>
           <ExtrasVsHospitalGapChart national={data.national_quarterly} />
         </section>
+      </section>
+
+      <section className="appendix" aria-labelledby="sec-appendix">
+        <span className="section-eyebrow">3 · Appendix</span>
+        <h2 id="sec-appendix" className="section-title">
+          Supporting analyses
+        </h2>
+
+        <div className="appendix-subsection" aria-labelledby="sec-appendix-states">
+          <span className="section-eyebrow">3A · Jurisdiction trajectories</span>
+          <h3 id="sec-appendix-states" className="appendix-subtitle">
+            {appendixTitle}
+          </h3>
+          <p className="lead">
+            Hospital cover rates have risen in parallel across states (typically 1 to 3
+            points of population since {baselineLabel}); ranking is little changed. Fastest lift:{" "}
+            {topState ? jurisdictionDisplayName(topState.key) : "—"}; slowest:{" "}
+            {bottomState ? jurisdictionDisplayName(bottomState.key) : "—"}. Differences are modest
+            compared with the national tier down-shift.
+          </p>
+          <JurisdictionChart
+            jurisdiction={data.jurisdiction_quarterly}
+            nationalHospitalQuarters={data.national_quarterly.map((n) => ({
+              quarter: n.quarter,
+              share_of_population: n.hospital_treatment.share_of_population,
+            }))}
+          />
+          <p className="chart-source">
+            Source: APRA Private Health Insurance Membership Trends.
+          </p>
+          <p className="chart-source" style={{ marginTop: 4 }}>
+            Note: APRA combines South Australia and the Northern Territory in first-block rates;
+            insured persons are implied from share × combined population in the ETL.
+          </p>
+        </div>
+
+        <div className="appendix-subsection" aria-labelledby="sec-appendix-mls">
+          <span className="section-eyebrow">3B · Tax-floor effect</span>
+          <h3 id="sec-appendix-mls" className="appendix-subtitle">
+            {mlsTitle}
+          </h3>
+          <p className="lead">
+            Basic hospital is, for many households, a tax product rather than a health product.
+            That creates a rational floor of MLS-liable households buying Basic purely to avoid
+            the surcharge. Basic-tier people are up ~19% since {baselineLabel}, outpacing the
+            ~13% growth in total hospital cover and consistent with this floor hardening.
+          </p>
+          {policy ? (
+            <MlsTaxFloorChart policy={policy} tierSeries={tierSeries} />
+          ) : (
+            <p className="muted">
+              Policy constants aren&apos;t available in this build. Add{" "}
+              <code>public/data/policy_constants.json</code> to show the MLS breakeven curve.
+            </p>
+          )}
+          <p className="chart-source">
+            Source: ATO MLS thresholds (FY {fmtFinancialYear(policy?.mls.financial_year ?? "2024-25")});
+            PrivateHealth.gov.au Basic hospital policies.
+          </p>
+          <p className="chart-source" style={{ marginTop: 4 }}>
+            Note: MLS rates are piecewise in income (1.0% / 1.25% / 1.5% across three singles
+            tiers above the FY base threshold of A$97,000). The dashed Navy line is a
+            representative cheapest Basic hospital premium — actual cheapest products vary by
+            state and insurer. Breakeven (vertical marker) shows where the two lines cross;
+            everything to the right is the shaded region where Basic is the rational tax-min
+            choice.
+          </p>
+        </div>
+
+        {ageQuartersAll.length > 0 && (
+          <div className="appendix-subsection" aria-labelledby="sec-appendix-lhc">
+            <span className="section-eyebrow">3C · LHC effectiveness observation</span>
+            <h3 id="sec-appendix-lhc" className="appendix-subtitle">
+              {lhcObservationTitle}
+            </h3>
+            <p className="lead">
+              Two policy levers are meant to pull young adults into private hospital cover:
+              the <strong>Age-Based Discount</strong> (18–29, the carrot — up to 10% off
+              premiums, tapering 2 pp per year from age 26) and the <strong>Lifetime Health
+              Cover loading</strong> (from age 31, the stick — 2% per year of delay, capped at
+              70%). The split at 30 is sharp. 25–29 coverage has risen since pre-reform,
+              consistent with the ABD working. 30–34 coverage has fallen over the same window,
+              even though this is the cohort the LHC loading is meant to activate. Plausible
+              explanations include the ABD cliff at age 30, migration composition (permanent
+              residents get a 12-month LHC grace period), and present bias against an abstract
+              future loading. APRA age data alone cannot adjudicate between them.
+            </p>
+            <Lhc31AgePanel
+              ageQuarters={ageQuartersAll}
+              latestQuarter={latestQ}
+              baselineQuarter={ageQuartersAll[0].quarter}
+            />
+            <p className="chart-source" style={{ marginTop: "var(--s-4)" }}>
+              Policy context: the Age-Based Discount (introduced 1 April 2019) gives eligible
+              18–29s up to a 10% discount on hospital premiums, stepping down 2 pp per year
+              from age 26. The Lifetime Health Cover loading applies from age 31 if people delay
+              taking hospital cover, rising 2% per year of delay and capped at 70%.
+            </p>
+          </div>
+        )}
       </section>
 
       <details className="methods">
@@ -521,104 +641,6 @@ export function App() {
           </p>
         </div>
       </details>
-
-      <section className="appendix" aria-labelledby="sec-appendix">
-        <span className="section-eyebrow">3 · Appendix</span>
-        <h2 id="sec-appendix" className="section-title">
-          Supporting analyses
-        </h2>
-
-        <div className="appendix-subsection" aria-labelledby="sec-appendix-states">
-          <span className="section-eyebrow">3A · Jurisdiction trajectories</span>
-          <h3 id="sec-appendix-states" className="appendix-subtitle">
-            {appendixTitle}
-          </h3>
-          <p className="lead">
-            Hospital cover rates have risen in parallel across states (typically 1 to 3
-            points of population since {baselineLabel}); ranking is little changed. Fastest lift:{" "}
-            {topState ? jurisdictionDisplayName(topState.key) : "—"}; slowest:{" "}
-            {bottomState ? jurisdictionDisplayName(bottomState.key) : "—"}. Differences are modest
-            compared with the national tier down-shift.
-          </p>
-          <JurisdictionChart
-            jurisdiction={data.jurisdiction_quarterly}
-            nationalHospitalQuarters={data.national_quarterly.map((n) => ({
-              quarter: n.quarter,
-              share_of_population: n.hospital_treatment.share_of_population,
-            }))}
-          />
-          <p className="chart-source">
-            Source: APRA Private Health Insurance Membership Trends.
-          </p>
-          <p className="chart-source" style={{ marginTop: 4 }}>
-            Note: APRA combines South Australia and the Northern Territory in first-block rates;
-            insured persons are implied from share × combined population in the ETL.
-          </p>
-        </div>
-
-        <div className="appendix-subsection" aria-labelledby="sec-appendix-mls">
-          <span className="section-eyebrow">3B · Tax-floor effect</span>
-          <h3 id="sec-appendix-mls" className="appendix-subtitle">
-            {mlsTitle}
-          </h3>
-          <p className="lead">
-            Basic hospital is, for many households, a tax product rather than a health product.
-            That creates a rational floor of MLS-liable households buying Basic purely to avoid
-            the surcharge. Basic-tier people are up ~19% since {baselineLabel}, outpacing the
-            ~13% growth in total hospital cover and consistent with this floor hardening.
-          </p>
-          {policy ? (
-            <MlsTaxFloorChart policy={policy} tierSeries={tierSeries} />
-          ) : (
-            <p className="muted">
-              Policy constants aren&apos;t available in this build. Add{" "}
-              <code>public/data/policy_constants.json</code> to show the MLS breakeven curve.
-            </p>
-          )}
-          <p className="chart-source">
-            Source: ATO MLS thresholds (FY {fmtFinancialYear(policy?.mls.financial_year ?? "2024-25")});
-            PrivateHealth.gov.au Basic hospital policies.
-          </p>
-          <p className="chart-source" style={{ marginTop: 4 }}>
-            Note: MLS rates are piecewise in income (1.0% / 1.25% / 1.5% across three singles
-            tiers above the FY base threshold of A$97,000). The dashed Navy line is a
-            representative cheapest Basic hospital premium — actual cheapest products vary by
-            state and insurer. Breakeven (vertical marker) shows where the two lines cross;
-            everything to the right is the shaded region where Basic is the rational tax-min
-            choice.
-          </p>
-        </div>
-
-        {ageQuartersAll.length > 0 && (
-          <div className="appendix-subsection" aria-labelledby="sec-appendix-lhc">
-            <span className="section-eyebrow">3C · LHC effectiveness observation</span>
-            <h3 id="sec-appendix-lhc" className="appendix-subtitle">
-              {lhcObservationTitle}
-            </h3>
-            <p className="lead">
-              The Age-Based Discount (ages 18–29, the carrot) and the Lifetime Health Cover
-              loading (from age 31, the stick) are the two main policy levers pulling young
-              adults into private hospital cover. The 25–29 rate has climbed since baseline —
-              consistent with the ABD working — but 30–34 has slipped, even though this is the
-              cohort the LHC loading is meant to activate. Plausible explanations include the
-              ABD cliff at age 30, migration composition (permanent residents get a 12-month
-              LHC grace period), and present bias against an abstract future loading. APRA age
-              data alone cannot adjudicate between them.
-            </p>
-            <Lhc31AgePanel
-              ageQuarters={ageQuartersAll}
-              latestQuarter={latestQ}
-              baselineQuarter={ageQuartersAll[0].quarter}
-            />
-            <p className="chart-source" style={{ marginTop: "var(--s-4)" }}>
-              Policy context: the Age-Based Discount (introduced 1 April 2019) gives eligible
-              18–29s up to a 10% discount on hospital premiums, stepping down 2 pp per year
-              from age 26. The Lifetime Health Cover loading applies from age 31 if people delay
-              taking hospital cover, rising 2% per year of delay and capped at 70%.
-            </p>
-          </div>
-        )}
-      </section>
 
       <footer className="site">
         <strong>Not financial or actuarial advice.</strong> Data as of {quarterLabel} from APRA,

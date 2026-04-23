@@ -130,7 +130,7 @@ export function CoverageCombinedChart({ data }: Props) {
     >
       <div className="chart-toolbar-row">
         <span className="chart-title">
-          Hospital &amp; extras — {mode === "share" ? "share of population" : "people covered"}
+          Hospital &amp; extras — {mode === "share" ? "share of population covered" : "people covered"}
         </span>
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
           {first && last && (

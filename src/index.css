@@ -331,38 +331,26 @@ section.insight-section {
 }
 
 /* ---------- Main-section grouping (sections 1 and 2) ---------- */
-/* Mirrors the appendix pattern: a dominant group header (h2) followed by
- * quieter sub-sections each with their own action title (h3). */
+/* A chapter marker: the group eyebrow (e.g. "1 · Growth") sits between
+ * two horizontal rules, with the sub-sections underneath carrying all
+ * of the narrative. Semantically the eyebrow is the group's h2, so the
+ * heading hierarchy stays h1 (hero) > h2 (group) > h3 (insight title). */
 
 section.insight-group {
   margin-top: var(--s-7);
-  padding-top: var(--s-5);
+}
+
+section.insight-group > h2.group-heading {
+  display: block;
+  margin: 0;
+  padding: var(--s-3) 0;
   border-top: 2px solid var(--ink);
-}
-
-section.insight-group > h2.group-title {
-  font-family: var(--font-serif);
-  font-size: 1.875rem;
-  font-weight: 600;
-  text-transform: none;
-  letter-spacing: -0.008em;
-  line-height: 1.2;
-  margin: 0 0 var(--s-3);
-  color: var(--ink);
-  max-width: none;
-}
-
-section.insight-group > p.group-lead {
-  font-family: var(--font-sans);
-  font-size: 1rem;
-  line-height: 1.6;
-  color: var(--slate);
-  margin: 0 0 var(--s-4);
-  max-width: 80ch;
+  border-bottom: 1px solid var(--rule);
+  /* .section-eyebrow already sets the typographic treatment. */
 }
 
 /* Child insight-sections nested inside a group reset their top margin and
- * share a thinner rule, since the group already owns the heavier rule. */
+ * share a thinner rule, since the group heading already provides a rule. */
 section.insight-group section.insight-section {
   margin-top: var(--s-5);
   padding-top: var(--s-5);
@@ -371,7 +359,7 @@ section.insight-group section.insight-section {
 
 section.insight-group section.insight-section:first-of-type {
   border-top: none;
-  margin-top: var(--s-4);
+  margin-top: var(--s-5);
   padding-top: 0;
 }
 
@@ -418,6 +406,13 @@ h3.section-title {
   line-height: 1.55;
   max-width: 65ch;
   margin: 0 0 var(--s-3);
+}
+
+/* The hero lead sits under a full-width h1, so let it span the full
+ * content width too — the headline block is the one place where this
+ * reads better than the default reading-measure. */
+.headline-block > .lead {
+  max-width: none;
 }
 
 .insight-headline {
