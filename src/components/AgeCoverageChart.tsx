@@ -38,7 +38,7 @@ const THREE_GROUPS: { key: string; label: string; bands: string[]; color: string
     key: "o65",
     label: "65 and over",
     bands: ["65-69", "70-74", "75-79", "80+"],
-    color: "var(--chart-brick)",
+    color: "var(--chart-blue-3)",
   },
 ];
 

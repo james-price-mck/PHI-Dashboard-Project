@@ -126,7 +126,7 @@ export function App() {
         <h1>Private health cover in Australia: growing, but trading down</h1>
         <p className="lead">
           <span className="emph-blue">More people</span> hold hospital cover and extras than before
-          the April 2019 tier reforms — but <span className="emph-red">Gold is shrinking</span>{" "}
+          the April 2019 tier reforms — but <span className="emph-ink">Gold is shrinking</span>{" "}
           as a share of the market while Silver and Bronze expand.
         </p>
         <p className="muted" style={{ marginTop: 4 }}>
@@ -135,8 +135,11 @@ export function App() {
           <code>public/data/premium_tiers.json</code>).
         </p>
 
-        <div className="kpi-row" style={{ marginTop: "1.25rem" }}>
-          <p className="kpi-group-label">Coverage — more people are covered</p>
+        <div className="kpi-group-header">
+          <p>Coverage — more people are covered</p>
+          <p>Tier mix — but trading down within hospital cover</p>
+        </div>
+        <div className="kpi-row">
           <KpiTile
             label="Hospital cover — people"
             value={natNow?.hospitalPersons != null ? fmtInt(natNow.hospitalPersons) : "—"}
@@ -171,7 +174,6 @@ export function App() {
                 : undefined
             }
           />
-          <p className="kpi-group-label">Tier mix — but trading down within hospital cover</p>
           <KpiTile
             variant="tier"
             label="Gold — share of hospital cover"
@@ -242,7 +244,7 @@ export function App() {
               cumulatively since 2020, versus{" "}
               <span className="emph-muted">+{premiumIndCum != null ? premiumIndCum.toFixed(0) : "—"}%</span>{" "}
               for the industry average — and Gold&apos;s share of hospital cover has fallen by{" "}
-              <span className="emph-red">
+              <span className="emph-ink">
                 {tierInsight.goldDeltaPp != null ? `${Math.abs(tierInsight.goldDeltaPp).toFixed(1)} pp` : "—"}
               </span>{" "}
               over the same window.

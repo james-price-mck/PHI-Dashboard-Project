@@ -14,9 +14,9 @@ import { fmtInt } from "../format";
 const COLORS = [
   "var(--accent-2)",
   "var(--chart-blue-2)",
+  "var(--chart-blue-3)",
   "var(--ink)",
   "var(--chart-warm-grey)",
-  "var(--chart-brick)",
 ];
 
 const tooltipStyle = {

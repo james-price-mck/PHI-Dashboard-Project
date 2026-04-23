@@ -34,7 +34,6 @@ function normalizeShare(v: number | null): number | null {
 
 function buildRows(data: NationalQuarter[]): Row[] {
   return data.map((d) => ({
-    // Prefer supplied share; fall back to insured/person denominator when share is absent.
     q: d.quarter,
     label: shortQuarterLabel(d.quarter),
     hospital_rate:
@@ -70,7 +69,8 @@ export function CoverageCombinedChart({ data }: Props) {
   const [mode, setMode] = useState<Mode>("share");
   const rows = useMemo(() => buildRows(data), [data]);
   const refRow = rows.find((r) => r.q === METHODOLOGY_REF_QUARTER);
-  const height = 320;
+  const hospitalKey = mode === "share" ? "hospital_rate" : "hospital_persons";
+  const extrasKey = mode === "share" ? "general_rate" : "general_persons";
 
   return (
     <div
@@ -99,8 +99,8 @@ export function CoverageCombinedChart({ data }: Props) {
           </button>
         </div>
       </div>
-      <ResponsiveContainer width="100%" height={height}>
-        <LineChart data={rows} margin={{ top: 8, right: 16, left: 4, bottom: 8 }}>
+      <ResponsiveContainer width="100%" height={320}>
+        <LineChart data={rows} margin={{ top: 20, right: 16, left: 4, bottom: 8 }}>
           <CartesianGrid stroke="var(--grid)" vertical={false} />
           <XAxis
             dataKey="label"
@@ -111,20 +111,22 @@ export function CoverageCombinedChart({ data }: Props) {
             tick={{ fill: "var(--muted)", fontSize: 9 }}
             minTickGap={24}
           />
-          {mode === "share" ? (
-            <YAxis
-              tickFormatter={(v) => `${(v * 100).toFixed(0)}%`}
-              tick={{ fill: "var(--muted)", fontSize: 10 }}
-              domain={[0, 0.7]}
-              width={38}
-            />
-          ) : (
-            <YAxis
-              tickFormatter={(v) => (v / 1e6).toFixed(1) + "m"}
-              tick={{ fill: "var(--muted)", fontSize: 10 }}
-              width={40}
-            />
-          )}
+          <YAxis
+            yAxisId="share"
+            hide={mode !== "share"}
+            tickFormatter={(v) => `${(v * 100).toFixed(0)}%`}
+            tick={{ fill: "var(--muted)", fontSize: 10 }}
+            domain={[0.3, 0.7]}
+            width={38}
+          />
+          <YAxis
+            yAxisId="levels"
+            hide={mode !== "levels"}
+            tickFormatter={(v) => (v / 1e6).toFixed(1) + "m"}
+            tick={{ fill: "var(--muted)", fontSize: 10 }}
+            domain={["auto", "auto"]}
+            width={40}
+          />
           <Tooltip
             contentStyle={tooltipStyle}
             formatter={(val: number, name: string) => {
@@ -137,61 +139,38 @@ export function CoverageCombinedChart({ data }: Props) {
             }}
           />
           <Legend wrapperStyle={{ fontSize: 11 }} />
-          {mode === "share" ? (
-            <>
-              <Line
-                type="monotone"
-                dataKey="hospital_rate"
-                name="Hospital cover"
-                stroke="var(--accent-2)"
-                dot={false}
-                strokeWidth={2.6}
-                connectNulls
-                isAnimationActive={false}
-              />
-              <Line
-                type="monotone"
-                dataKey="general_rate"
-                name="Extras cover"
-                stroke="var(--chart-brick)"
-                dot={false}
-                strokeWidth={2.3}
-                connectNulls
-                isAnimationActive={false}
-              />
-            </>
-          ) : (
-            <>
-              <Line
-                type="monotone"
-                dataKey="hospital_persons"
-                name="Hospital cover"
-                stroke="var(--accent-2)"
-                dot={false}
-                strokeWidth={2.6}
-                connectNulls
-                isAnimationActive={false}
-              />
-              <Line
-                type="monotone"
-                dataKey="general_persons"
-                name="Extras cover"
-                stroke="var(--chart-brick)"
-                dot={false}
-                strokeWidth={2.3}
-                connectNulls
-                isAnimationActive={false}
-              />
-            </>
-          )}
+          <Line
+            yAxisId={mode === "share" ? "share" : "levels"}
+            type="monotone"
+            dataKey={hospitalKey}
+            name="Hospital cover"
+            stroke="var(--accent-2)"
+            dot={false}
+            strokeWidth={2.6}
+            connectNulls
+            isAnimationActive={false}
+          />
+          <Line
+            yAxisId={mode === "share" ? "share" : "levels"}
+            type="monotone"
+            dataKey={extrasKey}
+            name="Extras cover"
+            stroke="var(--chart-blue-2)"
+            dot={false}
+            strokeWidth={2.3}
+            strokeDasharray="6 4"
+            connectNulls
+            isAnimationActive={false}
+          />
           {refRow && (
             <ReferenceLine
+              yAxisId={mode === "share" ? "share" : "levels"}
               x={refRow.label}
               stroke="var(--muted)"
               strokeDasharray="3 3"
               strokeOpacity={0.55}
               label={{
-                value: "Sep 2023 quarter — first APRA bundle under AASB 17 (membership unaffected)",
+                value: "Sep 2023 — first APRA bundle under AASB 17 (membership unaffected)",
                 position: "top",
                 fill: "var(--muted)",
                 fontSize: 9,
