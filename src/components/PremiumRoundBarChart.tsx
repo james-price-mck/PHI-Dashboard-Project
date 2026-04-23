@@ -64,11 +64,11 @@ export function PremiumRoundBarChart({ data }: { data: PremiumTierData }) {
     <div
       className="chart-panel"
       role="img"
-      aria-label="Premium increases by tier for the April 2025 and April 2026 rounds, with industry-average reference lines. Gold rose about thirteen percent in both rounds, well above the industry average."
+      aria-label="Premium increases by cover tier for April 2025 and April 2026, with industry-average reference lines. Gold rose about thirteen percent in both years, well above the industry average."
     >
       <div className="chart-toolbar-row">
         <span className="muted" style={{ fontSize: "0.75rem" }}>
-          Premium round — % increase by tier
+          Premium increases by cover tier
         </span>
         <span className="chart-daterange">Apr 2025 &amp; Apr 2026</span>
       </div>
@@ -103,8 +103,8 @@ export function PremiumRoundBarChart({ data }: { data: PremiumTierData }) {
             align="right"
             wrapperStyle={{ fontSize: 11, paddingBottom: 8 }}
             payload={[
-              { value: "April 2025 round", type: "square", color: "var(--light-grey)", id: "r25" },
-              { value: "April 2026 round", type: "square", color: "var(--mid-blue)", id: "r26" },
+              { value: "April 2025", type: "square", color: "var(--light-grey)", id: "r25" },
+              { value: "April 2026", type: "square", color: "var(--mid-blue)", id: "r26" },
               {
                 value: "Industry average (DoH)",
                 type: "line",
@@ -143,7 +143,7 @@ export function PremiumRoundBarChart({ data }: { data: PremiumTierData }) {
           )}
           <Bar
             dataKey="round2025"
-            name="April 2025 round"
+            name="April 2025"
             fill="var(--light-grey)"
             radius={[2, 2, 0, 0]}
             isAnimationActive={false}
@@ -157,7 +157,7 @@ export function PremiumRoundBarChart({ data }: { data: PremiumTierData }) {
           </Bar>
           <Bar
             dataKey="round2026"
-            name="April 2026 round"
+            name="April 2026"
             fill="var(--mid-blue)"
             radius={[2, 2, 0, 0]}
             isAnimationActive={false}
