@@ -46,13 +46,13 @@ function fmtNetNew(n: number): string {
 }
 
 /**
- * Bar shape with variable thickness keyed to √(netNewAbs). Recharts passes
- * the default y/height for the category slot; we redraw the rectangle
- * centred on the slot with a thickness derived from the bar's own datum so
- * each cohort's bar thickness encodes its absolute contribution to net new
- * insured lives.
+ * Bar shape with variable thickness keyed linearly to each cohort's share of
+ * the 25-plus adult population (latest quarter). Recharts passes the default
+ * y/height for the category slot; we redraw the rectangle centred on the
+ * slot with a thickness proportional to populationShare25Plus, so bar
+ * thickness is a faithful visual cue for "how big is this cohort".
  */
-function makeVariableThicknessShape(maxNetNewAbs: number) {
+function makeVariableThicknessShape(maxPopulationShare: number) {
   return function VariableThicknessBar(
     props: {
       x?: number;
@@ -60,16 +60,16 @@ function makeVariableThicknessShape(maxNetNewAbs: number) {
       width?: number;
       height?: number;
       fill?: string;
-      payload?: CoverageDeltaRow;
+      payload?: CoverageDeltaRow & { populationShare25Plus?: number };
     },
   ) {
     const { x = 0, y = 0, width = 0, height = 0, fill, payload } = props;
-    const netNewAbs = payload?.netNewAbs ?? 0;
-    // √-scale so small cohorts stay legible; clamp to [30%, 90%] of the slot.
-    const ratio =
-      maxNetNewAbs > 0 ? Math.sqrt(netNewAbs / maxNetNewAbs) : 0;
-    const thicknessPct = 0.3 + 0.6 * ratio;
-    const thickness = Math.max(6, height * thicknessPct);
+    const share = payload?.populationShare25Plus ?? 0;
+    // Linear scale of population share against the largest cohort; the
+    // largest cohort fills 90% of the slot, everything else is proportional.
+    // A 6 px minimum keeps tiny cohorts visible without lying about size.
+    const ratio = maxPopulationShare > 0 ? share / maxPopulationShare : 0;
+    const thickness = Math.max(6, height * 0.9 * ratio);
     const centreY = y + height / 2;
     // Negative bars come in with negative width (bar extends left from x).
     // Draw a left-aligned rectangle regardless of sign.
@@ -91,17 +91,27 @@ function makeVariableThicknessShape(maxNetNewAbs: number) {
 
 export function GrowthByAgeChart({ rows, baselineQuarter, latestQuarter }: Props) {
   // Decision-age cohorts only; Under-25 sits in the footnote as dependants context.
-  const chartData = rows
-    .filter((r) => r.decisionMaker && r.coverageDeltaPp != null)
-    .map((r) => ({
-      ...r,
-      coverageDeltaPp: r.coverageDeltaPp as number,
-    }));
+  const decisionRows = rows.filter(
+    (r) => r.decisionMaker && r.coverageDeltaPp != null,
+  );
+  const totalDecisionPopulation = decisionRows.reduce(
+    (s, r) => s + (r.populationNow || 0),
+    0,
+  );
+  // Each cohort's share of the 25+ decision-age population at the latest
+  // quarter, in [0, 1]. Used linearly for bar thickness, and shown verbatim
+  // in the tooltip so readers can verify the visual encoding.
+  const chartData = decisionRows.map((r) => ({
+    ...r,
+    coverageDeltaPp: r.coverageDeltaPp as number,
+    populationShare25Plus:
+      totalDecisionPopulation > 0 ? r.populationNow / totalDecisionPopulation : 0,
+  }));
 
   const under25 = rows.find((r) => r.label === "Under 25");
   const decisionTotalNetNew = chartData.reduce((s, r) => s + r.netNew, 0);
-  const maxNetNewAbs = chartData.reduce(
-    (m, r) => Math.max(m, r.netNewAbs),
+  const maxPopulationShare = chartData.reduce(
+    (m, r) => Math.max(m, r.populationShare25Plus),
     0,
   );
 
@@ -114,19 +124,21 @@ export function GrowthByAgeChart({ rows, baselineQuarter, latestQuarter }: Props
 
   const baselineLabel = shortQuarterLabel(baselineQuarter);
   const latestLabel = shortQuarterLabel(latestQuarter);
+  const baselineYear = baselineLabel.slice(0, 4);
+  const latestYear = latestLabel.slice(0, 4);
 
   return (
     <div
       className="chart-panel"
       role="img"
-      aria-label={`Change in hospital-cover coverage rate by age cohort, ${baselineLabel} to ${latestLabel}. Bar length is change in percentage points of the cohort's population; bar thickness is absolute net new insured lives. 30–34 and 60–64 are the only decision-age cohorts whose coverage rate has fallen.`}
+      aria-label={`Change in hospital-cover coverage rate by age cohort, ${baselineLabel} to ${latestLabel}. Bar length is change in percentage points of the cohort's population; bar thickness is the cohort's share of the 25-plus adult population. 30–34 and 60–64 are the only decision-age cohorts whose coverage rate has fallen.`}
     >
       <div className="chart-toolbar-row">
         <span className="chart-title">
-          Change in coverage rate by age cohort, {baselineLabel} to {latestLabel}
+          Change in coverage rate by age cohort, {baselineYear} to {latestYear}
         </span>
         <span className="chart-daterange">
-          Bar width = net new insured lives
+          Bar thickness = cohort share of 25+ adults
         </span>
       </div>
       <div style={{ display: "flex", gap: 16, alignItems: "stretch", flexWrap: "wrap" }}>
@@ -157,7 +169,7 @@ export function GrowthByAgeChart({ rows, baselineQuarter, latestQuarter }: Props
                 formatter={(
                   _v: number | string,
                   _name: string,
-                  item: { payload?: CoverageDeltaRow },
+                  item: { payload?: CoverageDeltaRow & { populationShare25Plus?: number } },
                 ) => {
                   const r = item?.payload;
                   if (!r) return ["—", ""];
@@ -165,8 +177,12 @@ export function GrowthByAgeChart({ rows, baselineQuarter, latestQuarter }: Props
                     r.coverageRateThen != null && r.coverageRateNow != null
                       ? `${(r.coverageRateThen * 100).toFixed(1)}% → ${(r.coverageRateNow * 100).toFixed(1)}% of cohort`
                       : "";
+                  const sharePart =
+                    r.populationShare25Plus != null
+                      ? `${(r.populationShare25Plus * 100).toFixed(0)}% of 25+ adults`
+                      : "";
                   return [
-                    `${fmtSignedPp(r.coverageDeltaPp)} · ${fmtNetNew(r.netNew)} insured lives · ${ratePart}`,
+                    `${fmtSignedPp(r.coverageDeltaPp)} · ${fmtNetNew(r.netNew)} insured lives · ${ratePart} · ${sharePart}`,
                     r.label,
                   ];
                 }}
@@ -175,7 +191,7 @@ export function GrowthByAgeChart({ rows, baselineQuarter, latestQuarter }: Props
               <Bar
                 dataKey="coverageDeltaPp"
                 isAnimationActive={false}
-                shape={makeVariableThicknessShape(maxNetNewAbs)}
+                shape={makeVariableThicknessShape(maxPopulationShare)}
               >
                 {chartData.map((row, i) => (
                   <Cell
@@ -287,12 +303,10 @@ export function GrowthByAgeChart({ rows, baselineQuarter, latestQuarter }: Props
         Source: APRA Membership and Benefits (AgeCohort_HT); ABS Estimated Resident Population.
       </p>
       <p className="chart-source" style={{ marginTop: 4 }}>
-        Note: Bar length shows the change in hospital-cover coverage rate within each cohort
-        (percentage points of the cohort's own population). Bar thickness scales with absolute
-        net new insured lives, so it also shows how much each cohort contributes to total growth.
-        30–34 and 60–64 are the only decision-age cohorts whose coverage rate has fallen since
-        {" "}{baselineLabel} — the 30–34 fall is explored further in the appendix (LHC and
-        Age-Based Discount observations).
+        Note: Bar length is the change in hospital-cover coverage rate within each cohort
+        (percentage points of the cohort's own population). Bar thickness is proportional to the
+        cohort's share of the 25-plus adult population at the latest quarter. Net new insured
+        lives are shown in the side panel.
         {under25 != null && Number.isFinite(under25.netNew)
           ? ` Under-25s (typically dependants on a family policy, not independent decision-makers) are excluded; they contributed ${fmtNetNew(under25.netNew)} net new insured lives over the same window.`
           : ""}

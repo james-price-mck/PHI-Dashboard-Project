@@ -47,11 +47,11 @@ export function TierGoldShareChart({
     >
       <div className="chart-toolbar-row">
         <span className="chart-title">
-          Gold — share of hospital cover
+          Gold share of hospital cover
         </span>
         {first && last && (
           <span className="chart-daterange">
-            {first.label} – {last.label}
+            {first.label.slice(0, 4)} – {last.label.slice(0, 4)}
           </span>
         )}
       </div>
@@ -87,9 +87,6 @@ export function TierGoldShareChart({
       <p className="chart-source">
         Source: Department of Health, Disability and Ageing — PHI Reform Data Quarterly Trends
         Report (HT by Product Tier).
-      </p>
-      <p className="chart-source" style={{ marginTop: 4 }}>
-        Note: Share of people with hospital cover on Gold tier, stable-tier window only.
       </p>
     </div>
   );

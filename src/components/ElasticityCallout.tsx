@@ -85,12 +85,12 @@ export function ElasticityCallout({ elasticity, baselineLabel, latestLabel }: Pr
         </div>
       </div>
       <p style={{ margin: 0, fontSize: "0.9375rem" }}>
-        Gold premium <em>revenue</em> on insured persons still rose by{" "}
-        <strong>{signed(revenueUpliftPct, 0)}%</strong> over the five years — losing ~
+        Gold premium revenue on insured persons still rose by{" "}
+        <strong>{signed(revenueUpliftPct, 0)}%</strong> over the five years. Losing ~
         {deltaQuantityPct != null ? Math.round(Math.abs(deltaQuantityPct)) : "—"}% of Gold
         members was more than offset by the ~
-        {deltaPricePct != null ? Math.round(deltaPricePct) : "—"}% price rise. Consistent with a
-        profit-maximising response to inelastic demand.
+        {deltaPricePct != null ? Math.round(deltaPricePct) : "—"}% price rise. This is
+        consistent with a profit-maximising response to inelastic demand.
       </p>
       <p className="muted" style={{ marginTop: 6, fontSize: "0.75rem" }}>
         Back-of-envelope partial correlation, not a causal identification. Revenue ignores claims

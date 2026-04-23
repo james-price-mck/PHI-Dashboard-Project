@@ -82,7 +82,7 @@ export function TierQuarterlyChart({ data }: Props) {
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
           {rows.length > 0 && (
             <span className="chart-daterange">
-              {rows[0].quarter} – {rows[rows.length - 1].quarter}
+              {rows[0].quarter.slice(0, 4)} – {rows[rows.length - 1].quarter.slice(0, 4)}
             </span>
           )}
           <div className="segmented" role="group" aria-label="Tier chart mode">

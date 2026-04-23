@@ -10,6 +10,7 @@ import {
   YAxis,
 } from "recharts";
 import { METHODOLOGY_REF_QUARTER } from "../constants";
+import { BASELINE_QUARTER } from "../insights";
 import type { NationalQuarter } from "../types";
 import { fmtInt, fmtPct, shortQuarterLabel } from "../format";
 
@@ -75,7 +76,13 @@ type Props = {
 
 export function CoverageCombinedChart({ data }: Props) {
   const [mode, setMode] = useState<Mode>("share");
-  const rows = useMemo(() => buildRows(data), [data]);
+  // Anchor the chart to the mandatory-tiers baseline (2020 Q2) so the view
+  // lines up with every other figure on the page.
+  const rows = useMemo(
+    () =>
+      buildRows(data).filter((r) => r.q >= BASELINE_QUARTER),
+    [data],
+  );
   const refRow = rows.find((r) => r.q === METHODOLOGY_REF_QUARTER);
   const hospitalKey = mode === "share" ? "hospital_rate" : "hospital_persons";
   const extrasKey = mode === "share" ? "general_rate" : "general_persons";

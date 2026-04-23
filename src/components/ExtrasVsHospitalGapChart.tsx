@@ -51,11 +51,11 @@ export function ExtrasVsHospitalGapChart({ national }: Props) {
     >
       <div className="chart-toolbar-row">
         <span className="chart-title">
-          Change in coverage share since {baselineLabel} (points of population)
+          Change in coverage share since {baselineLabel.slice(0, 4)} (points of population)
         </span>
         {first && last && (
           <span className="chart-daterange">
-            {first.label} – {last.label}
+            {first.label.slice(0, 4)} – {last.label.slice(0, 4)}
           </span>
         )}
       </div>
@@ -138,17 +138,6 @@ export function ExtrasVsHospitalGapChart({ national }: Props) {
             paddingTop: 12,
           }}
         >
-          <div
-            style={{
-              fontSize: 10,
-              textTransform: "uppercase",
-              letterSpacing: "0.08em",
-              color: "var(--slate)",
-              fontWeight: 700,
-            }}
-          >
-            Since {baselineLabel}
-          </div>
           <div>
             <div
               style={{
@@ -187,7 +176,7 @@ export function ExtrasVsHospitalGapChart({ national }: Props) {
                 fontWeight: 600,
               }}
             >
-              Extras, change since {baselineLabel}
+              Extras, change since {baselineLabel.slice(0, 4)}
             </div>
             <div
               style={{
@@ -212,7 +201,7 @@ export function ExtrasVsHospitalGapChart({ national }: Props) {
                 fontWeight: 600,
               }}
             >
-              Hospital, change since {baselineLabel}
+              Hospital, change since {baselineLabel.slice(0, 4)}
             </div>
             <div
               style={{

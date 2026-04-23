@@ -39,8 +39,8 @@ type BandMeta = { label: string; color: string; strokeWidth: number };
  * 35–39 sits in the background as stable-cohort context.
  */
 const BAND_META: Record<(typeof BANDS)[number], BandMeta> = {
-  "25-29": { label: "25–29 (ABD in force)", color: "var(--sky)", strokeWidth: 2.4 },
-  "30-34": { label: "30–34 (ABD tapers, LHC activates)", color: "var(--mid-blue)", strokeWidth: 2.6 },
+  "25-29": { label: "25–29 (ABD eligible)", color: "var(--sky)", strokeWidth: 2.4 },
+  "30-34": { label: "30–34 (LHC applies)", color: "var(--mid-blue)", strokeWidth: 2.6 },
   "35-39": { label: "35–39 (reference)", color: "var(--mid-grey)", strokeWidth: 1.6 },
 };
 
@@ -134,10 +134,10 @@ export function Lhc31AgePanel({ ageQuarters, latestQuarter, baselineQuarter }: P
   }
 
   return (
-    <div className="chart-panel" style={{ marginTop: 12 }} role="region" aria-label="LHC-31 panel: 25–29 rose under the Age-Based Discount while 30–34 fell once the discount tapered.">
+    <div className="chart-panel" style={{ marginTop: 12 }} role="region" aria-label="25–29 coverage has risen under the Age-Based Discount; 30–34 coverage has fallen despite the Lifetime Health Cover loading.">
       <div className="chart-toolbar-row">
         <span className="chart-title">
-          25–29 rose under the Age-Based Discount; 30–34 has fallen once the discount tapers
+          25–29 coverage has risen under the ABD; 30–34 coverage has fallen despite LHC
         </span>
         {first && last && (
           <span className="chart-daterange">
@@ -242,13 +242,13 @@ export function Lhc31AgePanel({ ageQuarters, latestQuarter, baselineQuarter }: P
             Coverage rate since {baselineLabel}
           </div>
           <StatCard
-            label="25–29 (ABD in force)"
+            label="25–29 (ABD eligible)"
             rangeLabel={rangeLabel(row25_29?.coverageThen, row25_29?.coverageNow)}
             deltaPp={row25_29?.coverageDeltaPp ?? null}
             valueColor="var(--sky)"
           />
           <StatCard
-            label="30–34 (ABD tapers, LHC activates)"
+            label="30–34 (LHC applies)"
             rangeLabel={rangeLabel(row30_34?.coverageThen, row30_34?.coverageNow)}
             deltaPp={row30_34?.coverageDeltaPp ?? null}
             valueColor="var(--mid-blue)"
@@ -287,11 +287,8 @@ export function Lhc31AgePanel({ ageQuarters, latestQuarter, baselineQuarter }: P
         Source: APRA Membership and Benefits (AgeCohort_HT); ABS Estimated Resident Population.
       </p>
       <p className="chart-source" style={{ marginTop: 4 }}>
-        Note: 25–29 (Sky) and 30–34 (Mid Blue) are the two insight series; 35–39 (Mid Grey) is a
-        stable reference cohort. The Age-Based Discount applies to 18–29s and steps down 2 pp per
-        year from age 26; the Lifetime Health Cover loading activates at age 31 and rises 2% per
-        year of delayed take-up. The 30–34 shortfall counterfactual holds the {baselineLabel}
-        coverage rate constant and applies it to the latest 30–34 population.
+        Note: 35–39 is shown as a stable reference cohort. The 30–34 shortfall holds the
+        {" "}{baselineLabel} coverage rate constant against the latest 30–34 population.
       </p>
     </div>
   );

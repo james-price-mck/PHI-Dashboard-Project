@@ -57,10 +57,49 @@ export function JurisdictionChart({
 
   return (
     <div
-      className="jurisdiction-grid"
       role="img"
       aria-label="Hospital cover share of population by state; all regions trend up in parallel with little change in ranking."
     >
+      <div
+        style={{
+          display: "flex",
+          gap: 20,
+          alignItems: "center",
+          marginBottom: 12,
+          fontSize: 11,
+          color: "var(--slate)",
+        }}
+        aria-hidden
+      >
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+          <svg width="24" height="8" aria-hidden>
+            <line
+              x1="0"
+              y1="4"
+              x2="24"
+              y2="4"
+              stroke="var(--mid-blue)"
+              strokeWidth={2.4}
+            />
+          </svg>
+          State / territory
+        </span>
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+          <svg width="24" height="8" aria-hidden>
+            <line
+              x1="0"
+              y1="4"
+              x2="24"
+              y2="4"
+              stroke="var(--slate)"
+              strokeWidth={1.5}
+              strokeDasharray="4 4"
+            />
+          </svg>
+          Australia (national)
+        </span>
+      </div>
+      <div className="jurisdiction-grid">
       {PANEL_ORDER.map((key) => {
         const jLatest = jurisdiction.at(-1)?.jurisdictions[key];
         const jThen = baselineRow?.jurisdictions[key];
@@ -125,6 +164,7 @@ export function JurisdictionChart({
           </div>
         );
       })}
+      </div>
     </div>
   );
 }

@@ -156,6 +156,23 @@ export function MlsTaxFloorChart({ policy, tierSeries }: Props) {
                 dot={false}
                 isAnimationActive={false}
               />
+              {singles
+                .filter((t) => t.rate > 0)
+                .map((t, idx) => (
+                  <ReferenceLine
+                    key={`mls-threshold-${t.label}`}
+                    x={t.min}
+                    stroke="var(--light-grey)"
+                    strokeDasharray="2 3"
+                    label={{
+                      value: `${t.label} · ${(t.rate * 100).toFixed(t.rate * 100 % 1 === 0 ? 0 : 2)}%`,
+                      position: idx % 2 === 0 ? "insideTopRight" : "insideBottomRight",
+                      fill: "var(--slate)",
+                      fontSize: 9,
+                      offset: 6,
+                    }}
+                  />
+                ))}
               {breakeven.breakevenIncomeAud != null && (
                 <ReferenceLine
                   x={breakeven.breakevenIncomeAud}
@@ -233,7 +250,7 @@ export function MlsTaxFloorChart({ policy, tierSeries }: Props) {
                 fontWeight: 600,
               }}
             >
-              Basic tier people
+              Individuals with basic cover
             </div>
             <div
               style={{
@@ -259,13 +276,13 @@ export function MlsTaxFloorChart({ policy, tierSeries }: Props) {
         </div>
       </div>
       <p className="chart-source">
-        Source: ATO Medicare Levy Surcharge thresholds (FY {fyLabel}); PrivateHealth.gov.au Basic
-        hospital policies (representative national midpoint).
+        Source: ATO; PrivateHealth.gov.au.
       </p>
       <p className="chart-source" style={{ marginTop: 4 }}>
-        Note: Navy line is the MLS payable with no hospital cover; Mid Blue dashed line is a
-        representative cheapest Basic premium; shaded Sky area shows the savings from holding
-        Basic instead of paying MLS. Actual cheapest Basic products vary by state and insurer.
+        Note: The MLS is separate from and additional to the 2% Medicare Levy. It is charged at
+        1.0% / 1.25% / 1.5% of whole-of-income across three tiers above A$97,000 (singles,
+        FY {fyLabel}), which is why the navy line steps up at each threshold. Basic premium is a
+        representative national midpoint; actual cheapest products vary by state and insurer.
       </p>
     </div>
   );
