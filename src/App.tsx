@@ -148,7 +148,7 @@ export function App() {
             delta={
               hDelta != null && hPp != null
                 ? {
-                    text: `${hDelta >= 0 ? "+" : ""}${fmtInt(hDelta)} vs ${shortQuarterLabel(BASELINE_QUARTER)} (${hPct != null ? `${hPct >= 0 ? "+" : ""}${hPct.toFixed(0)}% people, ${hPp >= 0 ? "+" : ""}${hPp.toFixed(1)} pp)`,
+                    text: `${hDelta >= 0 ? "+" : ""}${fmtInt(hDelta)} vs ${shortQuarterLabel(BASELINE_QUARTER)} (${hPct != null ? `${hPct >= 0 ? "+" : ""}${hPct.toFixed(0)}% people, ${hPp >= 0 ? "+" : ""}${hPp.toFixed(1)} pp` : "—"})`,
                     direction: hDelta >= 0 ? "up" : "down",
                   }
                 : undefined
@@ -165,7 +165,7 @@ export function App() {
             delta={
               eDelta != null && ePp != null
                 ? {
-                    text: `${eDelta >= 0 ? "+" : ""}${fmtInt(eDelta)} vs ${shortQuarterLabel(BASELINE_QUARTER)} (${ePct != null ? `${ePct >= 0 ? "+" : ""}${ePct.toFixed(0)}% people, ${ePp >= 0 ? "+" : ""}${ePp.toFixed(1)} pp)`,
+                    text: `${eDelta >= 0 ? "+" : ""}${fmtInt(eDelta)} vs ${shortQuarterLabel(BASELINE_QUARTER)} (${ePct != null ? `${ePct >= 0 ? "+" : ""}${ePct.toFixed(0)}% people, ${ePp >= 0 ? "+" : ""}${ePp.toFixed(1)} pp` : "—"})`,
                     direction: eDelta >= 0 ? "up" : "down",
                   }
                 : undefined
