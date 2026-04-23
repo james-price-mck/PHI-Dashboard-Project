@@ -57,7 +57,7 @@ export function ElasticityCallout({ elasticity, baselineLabel, latestLabel }: Pr
           color: "var(--mid-blue)",
         }}
       >
-        Gold demand is price-inelastic
+        Demand for Gold is price-inelastic
       </h3>
       <div className="stat-grid" role="group" aria-label="Gold elasticity stats">
         <div className="stat">

@@ -150,8 +150,8 @@ export function App() {
 
   const tradeDownTitle =
     tierInsight.goldDeltaPp != null
-      ? `Gold's share of hospital cover has fallen ${Math.round(Math.abs(tierInsight.goldDeltaPp))} points since 2020, as households trade down to Silver and Bronze.`
-      : "Gold's share of hospital cover has fallen since 2020, as households trade down to Silver and Bronze.";
+      ? `Gold's share of hospital cover has fallen ${Math.round(Math.abs(tierInsight.goldDeltaPp))} points since 2020, as households downgrade to Silver and Bronze.`
+      : "Gold's share of hospital cover has fallen since 2020, as households downgrade to Silver and Bronze.";
 
   // 1B frames 65+ as the volume engine. The 30–34 coverage-rate fall and the
   // broader young-adult deep dive are now handled in 1C (see lhcObservationTitle).
@@ -167,16 +167,16 @@ export function App() {
 
   const goldDivergenceTitle =
     goldFiveYear?.cumulative_pct != null && goldFiveYear?.industry_avg_pct != null
-      ? `Gold premiums have risen ${Math.round(goldFiveYear.cumulative_pct - goldFiveYear.industry_avg_pct)} points faster than the industry average over five years, widening the price gap households pay to stay on Gold.`
-      : "Gold premiums have outpaced the industry average over five years, widening the price gap households pay to stay on Gold.";
+      ? `Gold premiums have risen ${Math.round(goldFiveYear.cumulative_pct - goldFiveYear.industry_avg_pct)} points faster than the industry average over five years, widening the price gap driving policy change.`
+      : "Gold premiums have outpaced the industry average over five years, widening the price gap driving policy change.";
 
   const mlsTitle =
     "Above A$110,000 in singles income, Basic hospital cover is cheaper than the Medicare Levy Surcharge, creating a hard tax floor of Basic buyers.";
 
   const extrasGapTitle =
     extrasVsH.diffPp != null
-      ? `Extras cover has outgrown hospital cover by ${extrasVsH.diffPp.toFixed(1)} points since 2020. Households are protecting the benefits they use.`
-      : "Extras cover has grown faster than hospital cover since the 2019 reforms.";
+      ? `Extras cover has outgrown hospital cover by ${extrasVsH.diffPp.toFixed(1)} points since 2020, as households protect more tangible benefits.`
+      : "Extras cover has outgrown hospital cover since 2020, as households protect more tangible benefits.";
 
   const appendixTitle =
     "State coverage rates moved in parallel. The national tier mix is the real story.";
@@ -196,7 +196,7 @@ export function App() {
 
         <div className="kpi-group-header kpi-group-header--inverse">
           <p>Coverage, more Australians are covered</p>
-          <p>Tier mix, households are trading down</p>
+          <p>Tier mix, households are downgrading</p>
         </div>
         <div className="kpi-row kpi-row--inverse">
           <KpiTile
@@ -386,11 +386,11 @@ export function App() {
           id="sec-group-tradedown"
           className="section-eyebrow group-heading"
         >
-          2 · Tier trade-down
+          2 · Tier downgrade
         </h2>
 
         <section className="insight-section" aria-labelledby="sec-tier">
-          <span className="section-eyebrow">2A · Households are trading down</span>
+          <span className="section-eyebrow">2A · Households are downgrading</span>
           <h3 id="sec-tier" className="section-title">
             {tradeDownTitle}
           </h3>
@@ -456,9 +456,9 @@ export function App() {
             Extras cost a fraction of hospital cover and deliver frequent, visible benefits such
             as dental, optical, and physio. Under budget pressure, households protect those
             benefits and trim their hospital tier, Gold to Silver or Bronze, or down to Basic to
-            clear the MLS threshold. This is the behavioural counterpart to the price story in
-            Section 2B. The same affordability pressure that makes Gold premium rises bite is
-            what slows hospital-cover growth.
+            clear the MLS threshold. The same pattern runs through Section 2B. Households keep
+            extras and trim Gold because tangible benefits beat abstract ones under budget
+            pressure.
           </p>
           <ExtrasVsHospitalGapChart national={data.national_quarterly} />
         </section>
@@ -554,8 +554,8 @@ export function App() {
             publishes tier mix at the national level only — it is not cross-tabulated by age
             band or jurisdiction. For this reason the dashboard deliberately does not claim a
             causal link between the ageing of the risk pool (section 1B) and the Gold-to-Silver
-            /Bronze trade-down (section 2A): APRA age data shows who is buying, DoH shows the
-            national tier mix, and the two cannot be joined. The tier trade-down is evidenced as
+            /Bronze downgrade (section 2A): APRA age data shows who is buying, DoH shows the
+            national tier mix, and the two cannot be joined. The tier downgrade is evidenced as
             a price-and-affordability story in sections 2B and 2C.
           </p>
           <p>
