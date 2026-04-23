@@ -46,7 +46,7 @@ export function TierGoldShareChart({
       aria-label={`Gold share of hospital cover from ${baselineLabel} onward.`}
     >
       <div className="chart-toolbar-row">
-        <span className="muted" style={{ fontSize: "0.75rem" }}>
+        <span className="chart-title">
           Gold — share of hospital cover
         </span>
         {first && last && (
@@ -86,8 +86,10 @@ export function TierGoldShareChart({
       </ResponsiveContainer>
       <p className="chart-source">
         Source: Department of Health, Disability and Ageing — PHI Reform Data Quarterly Trends
-        Report (HT by Product Tier). Note: Share of people with hospital cover on Gold tier,
-        stable-tier window only.
+        Report (HT by Product Tier).
+      </p>
+      <p className="chart-source" style={{ marginTop: 4 }}>
+        Note: Share of people with hospital cover on Gold tier, stable-tier window only.
       </p>
     </div>
   );

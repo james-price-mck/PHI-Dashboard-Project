@@ -57,7 +57,7 @@ export function ElasticityCallout({ elasticity, baselineLabel, latestLabel }: Pr
           color: "var(--mid-blue)",
         }}
       >
-        Price-setting power — inelastic Gold demand
+        Price-inelastic demand for Gold tier
       </h3>
       <div className="stat-grid" role="group" aria-label="Gold elasticity stats">
         <div className="stat">

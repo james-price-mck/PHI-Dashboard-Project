@@ -186,7 +186,7 @@ a:hover {
   background: var(--surface);
   border: none;
   border-top: 1px solid var(--rule);
-  padding: var(--s-4) 0 var(--s-1);
+  padding: var(--s-4) var(--s-4) var(--s-4);
   min-width: 0;
 }
 
@@ -232,6 +232,89 @@ a:hover {
   color: var(--navy);
 }
 
+/* ---------- Inverted (Navy) KPI row ---------- */
+
+.kpi-row--inverse {
+  background: var(--navy);
+  padding: var(--s-5) var(--s-5);
+  border-radius: var(--radius-sm);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0;
+}
+
+.kpi-row--inverse > .kpi {
+  background: transparent;
+  border-top: none;
+  border-left: 1px solid rgba(255, 255, 255, 0.12);
+  padding: var(--s-2) var(--s-4);
+}
+
+.kpi-row--inverse > .kpi:first-child {
+  border-left: none;
+  padding-left: 0;
+}
+
+.kpi-row--inverse > .kpi.kpi--tier {
+  border-top: none;
+  border-left: 1px solid rgba(255, 255, 255, 0.28);
+}
+
+.kpi-row--inverse .kpi .label {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.kpi-row--inverse .kpi .value {
+  color: #ffffff;
+}
+
+.kpi-row--inverse .kpi .sub {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.kpi-row--inverse .kpi-delta.up,
+.kpi-row--inverse .kpi-delta.down {
+  color: var(--sky);
+}
+
+/* Header row (eyebrows above inverse KPI row) reads white-on-navy too */
+.kpi-group-header--inverse {
+  background: var(--navy);
+  padding: var(--s-4) var(--s-5) var(--s-2);
+  margin-top: var(--s-5);
+  margin-bottom: 0;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+}
+
+.kpi-group-header--inverse + .kpi-row--inverse {
+  margin-top: 0;
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+  padding-top: var(--s-3);
+}
+
+.kpi-group-header--inverse p {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+@media (max-width: 900px) {
+  .kpi-row--inverse {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    row-gap: var(--s-4);
+  }
+  .kpi-row--inverse > .kpi {
+    border-left: none;
+    padding-left: 0;
+  }
+  .kpi-row--inverse > .kpi.kpi--tier {
+    border-left: none;
+  }
+}
+
+@media (max-width: 520px) {
+  .kpi-row--inverse {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ---------- Sections ---------- */
 
 section.insight-section {
@@ -251,7 +334,7 @@ h1 {
   letter-spacing: -0.015em;
   line-height: 1.1;
   color: var(--ink);
-  max-width: 28ch;
+  max-width: none;
 }
 
 h2.section-title {
@@ -263,7 +346,7 @@ h2.section-title {
   line-height: 1.25;
   margin: 0 0 var(--s-3);
   color: var(--ink);
-  max-width: 42ch;
+  max-width: none;
 }
 
 .section-eyebrow {
@@ -303,6 +386,17 @@ h2.section-title {
   line-height: 1.55;
 }
 
+.sub-insight-title {
+  font-family: var(--font-sans);
+  font-size: 1.0625rem;
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: -0.003em;
+  color: var(--ink);
+  margin: 0 0 var(--s-2);
+  max-width: 80ch;
+}
+
 /* ---------- Chart panels ---------- */
 
 .chart-panel {
@@ -321,7 +415,16 @@ h2.section-title {
   color: var(--slate);
   margin: var(--s-3) 0 0;
   line-height: 1.5;
-  max-width: 72ch;
+  max-width: none;
+}
+
+.chart-title {
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: 0;
+  line-height: 1.3;
 }
 
 .chart-daterange {
@@ -500,7 +603,27 @@ h2.section-title {
   text-transform: none;
   letter-spacing: -0.005em;
   color: var(--ink);
-  max-width: 42ch;
+  max-width: none;
+}
+
+.appendix-subsection {
+  margin-top: var(--s-6);
+  padding-top: var(--s-5);
+  border-top: 1px solid var(--rule);
+}
+
+.appendix-subsection:first-of-type {
+  margin-top: var(--s-5);
+}
+
+.appendix-subtitle {
+  font-family: var(--font-serif);
+  font-size: 1.125rem;
+  font-weight: 600;
+  letter-spacing: -0.003em;
+  color: var(--ink);
+  margin: var(--s-2) 0 var(--s-3);
+  max-width: none;
 }
 
 .jurisdiction-grid {

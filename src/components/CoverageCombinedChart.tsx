@@ -18,6 +18,8 @@ type Mode = "share" | "levels";
 type Row = {
   q: string;
   label: string;
+  year: number;
+  quarterNum: number;
   hospital_rate: number | null;
   general_rate: number | null;
   hospital_persons: number | null;
@@ -32,24 +34,31 @@ function normalizeShare(v: number | null): number | null {
 }
 
 function buildRows(data: NationalQuarter[]): Row[] {
-  return data.map((d) => ({
-    q: d.quarter,
-    label: shortQuarterLabel(d.quarter),
-    hospital_rate:
-      normalizeShare(d.hospital_treatment.share_of_population) ??
-      (d.hospital_treatment.insured_persons != null &&
-      d.hospital_treatment.population_denominator
-        ? d.hospital_treatment.insured_persons / d.hospital_treatment.population_denominator
-        : null),
-    general_rate:
-      normalizeShare(d.general_treatment.share_of_population) ??
-      (d.general_treatment.insured_persons != null &&
-      d.general_treatment.population_denominator
-        ? d.general_treatment.insured_persons / d.general_treatment.population_denominator
-        : null),
-    hospital_persons: d.hospital_treatment.insured_persons,
-    general_persons: d.general_treatment.insured_persons,
-  }));
+  return data.map((d) => {
+    const dt = new Date(d.quarter);
+    const year = dt.getUTCFullYear();
+    const quarterNum = Math.floor(dt.getUTCMonth() / 3) + 1;
+    return {
+      q: d.quarter,
+      label: shortQuarterLabel(d.quarter),
+      year,
+      quarterNum,
+      hospital_rate:
+        normalizeShare(d.hospital_treatment.share_of_population) ??
+        (d.hospital_treatment.insured_persons != null &&
+        d.hospital_treatment.population_denominator
+          ? d.hospital_treatment.insured_persons / d.hospital_treatment.population_denominator
+          : null),
+      general_rate:
+        normalizeShare(d.general_treatment.share_of_population) ??
+        (d.general_treatment.insured_persons != null &&
+        d.general_treatment.population_denominator
+          ? d.general_treatment.insured_persons / d.general_treatment.population_denominator
+          : null),
+      hospital_persons: d.hospital_treatment.insured_persons,
+      general_persons: d.general_treatment.insured_persons,
+    };
+  });
 }
 
 const tooltipStyle = {
@@ -71,6 +80,36 @@ export function CoverageCombinedChart({ data }: Props) {
   const hospitalKey = mode === "share" ? "hospital_rate" : "hospital_persons";
   const extrasKey = mode === "share" ? "general_rate" : "general_persons";
 
+  // Year-only X-axis ticks: keep one tick per calendar year (first occurrence).
+  const yearTicks = useMemo(() => {
+    const seen = new Set<number>();
+    const ticks: string[] = [];
+    for (const r of rows) {
+      if (!seen.has(r.year)) {
+        seen.add(r.year);
+        ticks.push(r.label);
+      }
+    }
+    return ticks;
+  }, [rows]);
+
+  // Tight share-mode domain around where the data actually lives.
+  const shareDomain = useMemo<[number, number]>(() => {
+    const vals: number[] = [];
+    for (const r of rows) {
+      if (r.hospital_rate != null) vals.push(r.hospital_rate);
+      if (r.general_rate != null) vals.push(r.general_rate);
+    }
+    if (vals.length === 0) return [0.3, 0.7];
+    const min = Math.min(...vals);
+    const max = Math.max(...vals);
+    // Pad by 1.5 pp either side, then round to the nearest 1 pp.
+    const pad = 0.015;
+    const lo = Math.floor((min - pad) * 100) / 100;
+    const hi = Math.ceil((max + pad) * 100) / 100;
+    return [lo, hi];
+  }, [rows]);
+
   const first = rows[0];
   const last = rows.at(-1);
   const latestHospital =
@@ -90,7 +129,7 @@ export function CoverageCombinedChart({ data }: Props) {
       aria-label="Hospital cover and extras cover over time, share of population or people covered."
     >
       <div className="chart-toolbar-row">
-        <span className="muted" style={{ fontSize: "0.75rem" }}>
+        <span className="chart-title">
           Hospital &amp; extras — {mode === "share" ? "share of population" : "people covered"}
         </span>
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
@@ -124,19 +163,21 @@ export function CoverageCombinedChart({ data }: Props) {
               <CartesianGrid stroke="var(--grid)" vertical={false} />
               <XAxis
                 dataKey="label"
-                interval={Math.max(0, Math.floor(rows.length / 8) - 1)}
-                angle={-35}
-                textAnchor="end"
-                height={56}
+                ticks={yearTicks}
+                tickFormatter={(l: string) => (l ? l.slice(0, 4) : "")}
                 tick={{ fill: "var(--slate)", fontSize: 11 }}
-                minTickGap={24}
+                tickLine={false}
+                axisLine={{ stroke: "var(--rule)" }}
+                minTickGap={16}
+                padding={{ left: 8, right: 8 }}
               />
               <YAxis
                 yAxisId="share"
                 hide={mode !== "share"}
                 tickFormatter={(v) => `${(v * 100).toFixed(0)}%`}
                 tick={{ fill: "var(--slate)", fontSize: 11 }}
-                domain={[0.3, 0.7]}
+                domain={shareDomain}
+                tickCount={6}
                 width={40}
               />
               <YAxis
@@ -275,9 +316,12 @@ export function CoverageCombinedChart({ data }: Props) {
         )}
       </div>
       <p className="chart-source">
-        Source: APRA Private Health Insurance Membership Trends; ABS Estimated Resident Population
-        (denominator). Note: Hospital cover and extras are separate series; a person can hold
-        both, so the two lines are not additive.
+        Source: APRA Private Health Insurance Membership Trends; ABS Estimated Resident
+        Population (denominator).
+      </p>
+      <p className="chart-source" style={{ marginTop: 4 }}>
+        Note: Hospital cover and extras are separate series — a person can hold both, so the two
+        lines are not additive.
       </p>
     </div>
   );

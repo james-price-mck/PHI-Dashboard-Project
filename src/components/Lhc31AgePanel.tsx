@@ -77,7 +77,7 @@ export function Lhc31AgePanel({ ageQuarters, latestQuarter, baselineQuarter }: P
   return (
     <div className="chart-panel" style={{ marginTop: 12 }} role="region" aria-label="LHC-31 puzzle panel">
       <div className="chart-toolbar-row">
-        <span className="muted" style={{ fontSize: "0.75rem" }}>
+        <span className="chart-title">
           30–34 coverage fell despite LHC loading
         </span>
         {first && last && (
@@ -237,6 +237,8 @@ export function Lhc31AgePanel({ ageQuarters, latestQuarter, baselineQuarter }: P
       </div>
       <p className="chart-source">
         Source: APRA Membership and Benefits (AgeCohort_HT); ABS Estimated Resident Population.
+      </p>
+      <p className="chart-source" style={{ marginTop: 4 }}>
         Note: 30–34 is the insight series (Mid Blue); 25–29 and 35–39 are supporting context.
         Shortfall counterfactual uses the {baselineLabel} coverage rate × latest population.
       </p>

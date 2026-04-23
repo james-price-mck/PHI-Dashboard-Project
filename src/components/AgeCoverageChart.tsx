@@ -63,7 +63,7 @@ export function AgeCoverageChart({ data }: Props) {
       aria-label="Year-on-year growth in people with hospital cover, by age group. Under-35s consistently outpace older cohorts."
     >
       <div className="chart-toolbar-row">
-        <span className="muted" style={{ fontSize: "0.75rem" }}>
+        <span className="chart-title">
           YoY growth — people with hospital cover, by age group
         </span>
         {first && last && (
@@ -189,6 +189,8 @@ export function AgeCoverageChart({ data }: Props) {
       </div>
       <p className="chart-source">
         Source: APRA Membership and Benefits (AgeCohort_HT); ABS Estimated Resident Population.
+      </p>
+      <p className="chart-source" style={{ marginTop: 4 }}>
         Note: Trailing-four-quarter year-on-year growth in people with hospital cover; dashed
         Slate line is the zero-growth baseline.
       </p>

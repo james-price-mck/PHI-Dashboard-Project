@@ -50,7 +50,7 @@ export function ExtrasVsHospitalGapChart({ national }: Props) {
       aria-label={`Cumulative percentage-point change in hospital and extras coverage share since ${baselineLabel}. Extras outpaces hospital.`}
     >
       <div className="chart-toolbar-row">
-        <span className="muted" style={{ fontSize: "0.75rem" }}>
+        <span className="chart-title">
           Cumulative pp Δ in coverage share since {baselineLabel}
         </span>
         {first && last && (
@@ -231,8 +231,11 @@ export function ExtrasVsHospitalGapChart({ national }: Props) {
       </div>
       <p className="chart-source">
         Source: APRA Private Health Insurance Membership Trends; ABS Estimated Resident
-        Population (denominator). Note: Mid Blue line is the gap (extras − hospital); hospital
-        and extras are plotted as supporting series in Slate and Mid Grey.
+        Population (denominator).
+      </p>
+      <p className="chart-source" style={{ marginTop: 4 }}>
+        Note: Mid Blue line is the gap (extras − hospital); hospital and extras are plotted as
+        supporting series in Slate and Mid Grey.
       </p>
     </div>
   );

@@ -76,7 +76,7 @@ export function TierQuarterlyChart({ data }: Props) {
       aria-label="Stacked hospital cover product tier mix over time, gold share falling and silver and bronze rising."
     >
       <div className="chart-toolbar-row">
-        <span className="muted" style={{ fontSize: "0.75rem" }}>
+        <span className="chart-title">
           Hospital cover — product-tier mix
         </span>
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
@@ -253,8 +253,11 @@ export function TierQuarterlyChart({ data }: Props) {
       </div>
       <p className="chart-source">
         Source: Department of Health, Disability and Ageing — PHI Reform Data Quarterly Trends
-        Report (HT by Product Tier). Note: Legacy is the pre-reform product set tapering to zero
-        over 2019–2020; the stable mix reads cleanly from 2020 Q2 onward.
+        Report (HT by Product Tier).
+      </p>
+      <p className="chart-source" style={{ marginTop: 4 }}>
+        Note: Legacy is the pre-reform product set tapering to zero over 2019–2020; the stable
+        mix reads cleanly from 2020 Q2 onward.
       </p>
     </div>
   );

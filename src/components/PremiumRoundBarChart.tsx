@@ -67,7 +67,7 @@ export function PremiumRoundBarChart({ data }: { data: PremiumTierData }) {
       aria-label="Premium increases by cover tier for April 2025 and April 2026, with industry-average reference lines. Gold rose about thirteen percent in both years, well above the industry average."
     >
       <div className="chart-toolbar-row">
-        <span className="muted" style={{ fontSize: "0.75rem" }}>
+        <span className="chart-title">
           Premium increases by cover tier
         </span>
         <span className="chart-daterange">Apr 2025 &amp; Apr 2026</span>
@@ -172,10 +172,35 @@ export function PremiumRoundBarChart({ data }: { data: PremiumTierData }) {
         </BarChart>
       </ResponsiveContainer>
       <p className="chart-source">
-        Source: CHOICE analysis of big-five insurers — Bupa, HCF, HBF, Medibank, NIB — for the
-        April 2025 and April 2026 premium rounds; Department of Health, Disability and Ageing for
-        industry-weighted averages. Note: These are the only two rounds with credible per-tier
-        public estimates; earlier years show only the DoH industry average.
+        Source: CHOICE, Feb 2026 (
+        <a
+          href="https://www.choice.com.au/money/insurance/health/articles/insurers-hiding-soaring-increases-to-top-level-health-cover"
+          target="_blank"
+          rel="noreferrer"
+        >
+          5-year Gold vs industry average
+        </a>
+        ); CHOICE, Mar 2026 (
+        <a
+          href="https://www.choice.com.au/money/insurance/health/articles/health-insurance-price-hikes-higher-than-ever-what-youre-really-paying"
+          target="_blank"
+          rel="noreferrer"
+        >
+          big-five per-tier breakdown of the April 2025 and April 2026 rounds
+        </a>
+        );{" "}
+        <a
+          href="https://www.health.gov.au/resources/publications/average-annual-price-changes-in-private-health-insurance-premiums"
+          target="_blank"
+          rel="noreferrer"
+        >
+          Department of Health, Disability and Ageing — industry-weighted premium rounds
+        </a>
+        .
+      </p>
+      <p className="chart-source" style={{ marginTop: 4 }}>
+        Note: Credible per-tier public estimates exist only for the April 2025 and April 2026
+        rounds; earlier years show only the DoH industry-weighted average.
       </p>
     </div>
   );

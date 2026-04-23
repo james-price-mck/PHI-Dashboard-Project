@@ -120,29 +120,60 @@ export function computeStateMovers(
 }
 
 /** Age bands for growth decomposition (matches GrowthByAgeChart display). */
-const GROWTH_AGE_GROUPS: { label: string; bands: string[] }[] = [
-  { label: "Under 25", bands: ["0-4", "5-9", "10-14", "15-19", "20-24"] },
-  { label: "25–34", bands: ["25-29", "30-34"] },
-  { label: "35–49", bands: ["35-39", "40-44", "45-49"] },
-  { label: "50–64", bands: ["50-54", "55-59", "60-64"] },
-  { label: "65 and over", bands: ["65-69", "70-74", "75-79", "80+"] },
+const GROWTH_AGE_GROUPS: { label: string; bands: string[]; decisionMaker: boolean }[] = [
+  { label: "Under 25", bands: ["0-4", "5-9", "10-14", "15-19", "20-24"], decisionMaker: false },
+  { label: "25–34", bands: ["25-29", "30-34"], decisionMaker: true },
+  { label: "35–49", bands: ["35-39", "40-44", "45-49"], decisionMaker: true },
+  { label: "50–64", bands: ["50-54", "55-59", "60-64"], decisionMaker: true },
+  { label: "65 and over", bands: ["65-69", "70-74", "75-79", "80+"], decisionMaker: true },
 ];
 
 export type AgeGrowthRow = {
   label: string;
+  /** True for cohorts counted as coverage decision-makers (25+). */
+  decisionMaker: boolean;
+  /** Net new insured lives in the cohort since baseline. */
   netNew: number;
-  shareOfTotal: number;
+  /** Cohort's share of total net growth, in percent (signed, may be >100 or <0 when other cohorts shrink). */
+  growthSharePct: number | null;
+  /** Cohort's share of the decision-age adult population at the latest quarter, in percent. */
+  populationSharePct: number | null;
+  /** (growthSharePct − populationSharePct) in percentage points. Positive = over-indexing. Null for non-decision-makers. */
+  overIndexPp: number | null;
+  /** Coverage rate at baseline and latest (0–1). */
+  coverageRateThen: number | null;
+  coverageRateNow: number | null;
+  /** Coverage-rate change (pp). */
+  coverageDeltaPp: number | null;
 };
 
 export function computeNetNewByAgeGroup(
   ageQuarters: AgeCoverageQuarter[],
   baselineQuarter: string,
   latestQuarter: string,
-): { rows: AgeGrowthRow[]; totalGrowth: number; under35SharePct: number | null } {
+): {
+  rows: AgeGrowthRow[];
+  totalGrowth: number;
+  /** Net growth attributable to decision-age adults (25+), in persons. */
+  decisionAgeGrowth: number;
+  /** 25–34's share of decision-age net growth, in percent. The primary demographics-as-a-driver headline number. */
+  youngDecisionMakerGrowthSharePct: number | null;
+  /** 25–34's share of the decision-age adult population at the latest quarter, in percent. */
+  youngDecisionMakerPopulationSharePct: number | null;
+  /** Net of the two above, in pp. Negative = under-indexing relative to population weight. */
+  youngDecisionMakerOverIndexPp: number | null;
+} {
   const qThen = ageQuarters.find((q) => q.quarter === baselineQuarter);
   const qNow = ageQuarters.find((q) => q.quarter === latestQuarter);
   if (!qThen || !qNow) {
-    return { rows: [], totalGrowth: 0, under35SharePct: null };
+    return {
+      rows: [],
+      totalGrowth: 0,
+      decisionAgeGrowth: 0,
+      youngDecisionMakerGrowthSharePct: null,
+      youngDecisionMakerPopulationSharePct: null,
+      youngDecisionMakerOverIndexPp: null,
+    };
   }
 
   function sumInsured(q: AgeCoverageQuarter, bands: string[]) {
@@ -154,30 +185,83 @@ export function computeNetNewByAgeGroup(
     return s;
   }
 
-  const rows: AgeGrowthRow[] = [];
+  function sumPopulation(q: AgeCoverageQuarter, bands: string[]) {
+    let s = 0;
+    for (const b of bands) {
+      const cell = q.bands[b];
+      if (cell) s += cell.population;
+    }
+    return s;
+  }
+
+  // Population denominator = decision-age adults (25+) at latest quarter.
+  const decisionAgePopulationNow = GROWTH_AGE_GROUPS
+    .filter((g) => g.decisionMaker)
+    .reduce((s, g) => s + sumPopulation(qNow, g.bands), 0);
+
   let totalGrowth = 0;
-  for (const g of GROWTH_AGE_GROUPS) {
+  let decisionAgeGrowth = 0;
+
+  const raw = GROWTH_AGE_GROUPS.map((g) => {
     const then = sumInsured(qThen, g.bands);
     const now = sumInsured(qNow, g.bands);
+    const popThen = sumPopulation(qThen, g.bands);
+    const popNow = sumPopulation(qNow, g.bands);
     const netNew = now - then;
     totalGrowth += netNew;
-    rows.push({ label: g.label, netNew, shareOfTotal: 0 });
-  }
+    if (g.decisionMaker) decisionAgeGrowth += netNew;
+    const coverageRateThen = popThen > 0 ? then / popThen : null;
+    const coverageRateNow = popNow > 0 ? now / popNow : null;
+    const coverageDeltaPp =
+      coverageRateNow != null && coverageRateThen != null
+        ? (coverageRateNow - coverageRateThen) * 100
+        : null;
+    return {
+      group: g,
+      netNew,
+      popNow,
+      coverageRateThen,
+      coverageRateNow,
+      coverageDeltaPp,
+    };
+  });
 
-  const absTotal = rows.reduce((a, r) => a + Math.max(0, r.netNew), 0);
-  for (const r of rows) {
-    r.shareOfTotal = absTotal > 0 ? (Math.max(0, r.netNew) / absTotal) * 100 : 0;
-  }
+  const rows: AgeGrowthRow[] = raw.map((r) => {
+    const growthSharePct =
+      r.group.decisionMaker && decisionAgeGrowth !== 0
+        ? (r.netNew / decisionAgeGrowth) * 100
+        : null;
+    const populationSharePct =
+      r.group.decisionMaker && decisionAgePopulationNow > 0
+        ? (r.popNow / decisionAgePopulationNow) * 100
+        : null;
+    const overIndexPp =
+      growthSharePct != null && populationSharePct != null
+        ? growthSharePct - populationSharePct
+        : null;
+    return {
+      label: r.group.label,
+      decisionMaker: r.group.decisionMaker,
+      netNew: r.netNew,
+      growthSharePct,
+      populationSharePct,
+      overIndexPp,
+      coverageRateThen: r.coverageRateThen,
+      coverageRateNow: r.coverageRateNow,
+      coverageDeltaPp: r.coverageDeltaPp,
+    };
+  });
 
-  const under35Labels = new Set(["Under 25", "25–34"]);
-  let under35Net = 0;
-  for (const r of rows) {
-    if (under35Labels.has(r.label)) under35Net += r.netNew;
-  }
-  const under35SharePct =
-    totalGrowth !== 0 ? (under35Net / totalGrowth) * 100 : null;
+  const young = rows.find((r) => r.label === "25–34");
 
-  return { rows, totalGrowth, under35SharePct };
+  return {
+    rows,
+    totalGrowth,
+    decisionAgeGrowth,
+    youngDecisionMakerGrowthSharePct: young?.growthSharePct ?? null,
+    youngDecisionMakerPopulationSharePct: young?.populationSharePct ?? null,
+    youngDecisionMakerOverIndexPp: young?.overIndexPp ?? null,
+  };
 }
 
 /**

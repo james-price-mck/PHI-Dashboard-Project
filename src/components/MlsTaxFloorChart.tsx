@@ -75,7 +75,7 @@ export function MlsTaxFloorChart({ policy, tierSeries }: Props) {
       aria-label="MLS payable vs Basic hospital premium across singles income. Shaded region shows where the surcharge exceeds the Basic premium."
     >
       <div className="chart-toolbar-row">
-        <span className="muted" style={{ fontSize: "0.75rem" }}>
+        <span className="chart-title">
           MLS payable vs Basic hospital premium — singles, FY {fyLabel}
         </span>
         <span className="chart-daterange">FY {fyLabel}</span>
@@ -260,10 +260,12 @@ export function MlsTaxFloorChart({ policy, tierSeries }: Props) {
       </div>
       <p className="chart-source">
         Source: ATO Medicare Levy Surcharge thresholds (FY {fyLabel}); PrivateHealth.gov.au Basic
-        hospital policies (representative national midpoint). Note: Navy line is the MLS payable
-        with no hospital cover; Mid Blue dashed line is a representative cheapest Basic premium;
-        shaded Sky area shows the savings from holding Basic instead of paying MLS. Actual
-        cheapest Basic products vary by state and insurer.
+        hospital policies (representative national midpoint).
+      </p>
+      <p className="chart-source" style={{ marginTop: 4 }}>
+        Note: Navy line is the MLS payable with no hospital cover; Mid Blue dashed line is a
+        representative cheapest Basic premium; shaded Sky area shows the savings from holding
+        Basic instead of paying MLS. Actual cheapest Basic products vary by state and insurer.
       </p>
     </div>
   );
