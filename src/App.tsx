@@ -159,8 +159,8 @@ export function App() {
   // cross-tabulated by age, so any tier × age link is inferred, not measured.
   const growthDriverTitle =
     cohort65ShareOfDecisionNetNew != null
-      ? `Australians 65 and over drive ${Math.round(cohort65ShareOfDecisionNetNew)}% of decision-age coverage growth.`
-      : "Australians 65 and over drive decision-age coverage growth.";
+      ? `Australians 65 and over drive ${Math.round(cohort65ShareOfDecisionNetNew)}% of coverage growth.`
+      : "Australians 65 and over drive coverage growth.";
 
   const lhcObservationTitle =
     "The Age-Based Discount is lifting young-adult coverage, but the Lifetime Health Cover loading is not.";
@@ -333,8 +333,8 @@ export function App() {
                   <>
                     65-and-overs account for{" "}
                     <strong>{cohort65ShareOfDecisionNetNew.toFixed(0)}%</strong> of net new
-                    decision-age customers since {baselineYear}, and have been the volume
-                    engine behind the overall rise in coverage.
+                    customers since {baselineYear}, and have been the volume engine behind the
+                    overall rise in coverage.
                   </>
                 ) : (
                   <>
