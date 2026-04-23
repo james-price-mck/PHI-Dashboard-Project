@@ -104,6 +104,27 @@ export type PremiumTierData = {
   multi_year_observations: PremiumMultiYearObservation[];
 };
 
+export type MlsTier = {
+  label: string;
+  min: number;
+  max: number | null;
+  rate: number;
+};
+
+export type PolicyConstants = {
+  meta: {
+    last_reviewed: string;
+    sources: string[];
+    notes: string;
+  };
+  mls: {
+    financial_year: string;
+    singles_tiers: MlsTier[];
+    family_tiers: MlsTier[];
+  };
+  basic_hospital_premium_representative_aud: number;
+};
+
 export type DashboardData = {
   meta: {
     data_as_of: string | null;

@@ -39,6 +39,8 @@ Deployable to **GitHub Pages** with **GitHub Actions**.
    - `tier_rounds` — one entry per round where credible per-tier figures exist (today: the big-five CHOICE analyses of the April 2025 and April 2026 rounds). Each entry carries `gold`, `silver`, `bronze`, `basic`, the matching `industry_avg_pct`, and a `source` string.
    - `multi_year_observations` — aggregate Gold-vs-industry statements (e.g. the CHOICE 5-year number). Do **not** backfill per-tier figures with industry-average fallbacks; that was the misleading pattern we removed.
 
+4a. **Policy constants (annual refresh)** — `public/data/policy_constants.json` backs the MLS tax-floor panel. Refresh each **1 July** when the ATO updates [Medicare Levy Surcharge thresholds](https://www.ato.gov.au/individuals-and-families/medicare-and-private-health-insurance/medicare-levy-surcharge/income-for-medicare-levy-surcharge) and bump `financial_year`. Re-check `basic_hospital_premium_representative_aud` against the cheapest compliant Basic hospital products on [PrivateHealth.gov.au](https://www.privatehealth.gov.au/); it is an order-of-magnitude proxy, not a statistical average.
+
 5. **Front end** (produces `package-lock.json`; **commit the lockfile** for faster, reliable CI):
 
    ```bash

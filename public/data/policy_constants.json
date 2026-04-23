@@ -1,0 +1,27 @@
+{
+  "meta": {
+    "last_reviewed": "2026-04-01",
+    "sources": [
+      "Australian Taxation Office — Medicare Levy Surcharge income thresholds (FY 2024-25)",
+      "PrivateHealth.gov.au — Basic hospital policies (representative national midpoint)",
+      "Australian Government Department of Health, Disability and Ageing — Lifetime Health Cover & Age-Based Discount policy design"
+    ],
+    "notes": "Hardcoded policy constants used to render the MLS tax-floor breakeven panel. Refresh annually (1 July) when the ATO updates MLS thresholds. The Basic premium midpoint is an order-of-magnitude proxy for the cheapest compliant hospital product; actual cheapest Basic policies vary by state and insurer (typically ~$900-$1,400/yr)."
+  },
+  "mls": {
+    "financial_year": "2024-25",
+    "singles_tiers": [
+      { "label": "Base (no MLS)", "min": 0, "max": 97000, "rate": 0.0 },
+      { "label": "Tier 1", "min": 97001, "max": 113000, "rate": 0.010 },
+      { "label": "Tier 2", "min": 113001, "max": 151000, "rate": 0.0125 },
+      { "label": "Tier 3", "min": 151001, "max": null, "rate": 0.015 }
+    ],
+    "family_tiers": [
+      { "label": "Base (no MLS)", "min": 0, "max": 194000, "rate": 0.0 },
+      { "label": "Tier 1", "min": 194001, "max": 226000, "rate": 0.010 },
+      { "label": "Tier 2", "min": 226001, "max": 302000, "rate": 0.0125 },
+      { "label": "Tier 3", "min": 302001, "max": null, "rate": 0.015 }
+    ]
+  },
+  "basic_hospital_premium_representative_aud": 1100
+}

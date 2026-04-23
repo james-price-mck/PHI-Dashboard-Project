@@ -1,11 +1,13 @@
-import type { DashboardData, PremiumTierData } from "./types";
+import type { DashboardData, PolicyConstants, PremiumTierData } from "./types";
 
 const DASHBOARD_FILE = "dashboard.json";
 const PREMIUM_FILE = "premium_tiers.json";
+const POLICY_FILE = "policy_constants.json";
 
 export type DashboardBundle = {
   dashboard: DashboardData;
   premium: PremiumTierData | null;
+  policy: PolicyConstants | null;
 };
 
 function dataUrl(file: string): string {
@@ -32,10 +34,21 @@ export async function loadPremiumTierData(): Promise<PremiumTierData | null> {
   return (await res.json()) as PremiumTierData;
 }
 
+export async function loadPolicyConstants(): Promise<PolicyConstants | null> {
+  const url = dataUrl(POLICY_FILE);
+  const res = await fetch(url);
+  if (!res.ok) {
+    console.warn(`Policy constants not loaded (${res.status}): ${url}`);
+    return null;
+  }
+  return (await res.json()) as PolicyConstants;
+}
+
 export async function loadDashboardBundle(): Promise<DashboardBundle> {
-  const [dashboard, premium] = await Promise.all([
+  const [dashboard, premium, policy] = await Promise.all([
     loadDashboardData(),
     loadPremiumTierData(),
+    loadPolicyConstants(),
   ]);
-  return { dashboard, premium };
+  return { dashboard, premium, policy };
 }

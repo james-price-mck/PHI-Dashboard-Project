@@ -1,10 +1,14 @@
 import { useEffect, useState } from "react";
 import { AgeCoverageChart } from "./components/AgeCoverageChart";
 import { CoverageCombinedChart } from "./components/CoverageCombinedChart";
+import { ElasticityCallout } from "./components/ElasticityCallout";
+import { ExtrasVsHospitalGapChart } from "./components/ExtrasVsHospitalGapChart";
 import { GrowthByAgeChart } from "./components/GrowthByAgeChart";
 import { InsightHeadline } from "./components/InsightHeadline";
 import { JurisdictionChart } from "./components/JurisdictionChart";
 import { KpiTile } from "./components/KpiTile";
+import { Lhc31AgePanel } from "./components/Lhc31AgePanel";
+import { MlsTaxFloorChart } from "./components/MlsTaxFloorChart";
 import { PremiumRoundBarChart } from "./components/PremiumRoundBarChart";
 import { TierGoldShareChart } from "./components/TierGoldShareChart";
 import { TierQuarterlyChart } from "./components/TierQuarterlyChart";
@@ -12,6 +16,7 @@ import { fmtInt, fmtPct, jurisdictionDisplayName, shortQuarterLabel } from "./fo
 import {
   BASELINE_QUARTER,
   computeExtrasVsHospitalPpDivergence,
+  computeGoldElasticity,
   computeNetNewByAgeGroup,
   computeStateMovers,
   computeTierInsight,
@@ -21,20 +26,22 @@ import {
   pctChange,
 } from "./insights";
 import { loadDashboardBundle } from "./loadDashboardData";
-import type { DashboardData, PremiumTierData } from "./types";
+import type { DashboardData, PolicyConstants, PremiumTierData } from "./types";
 
 function useBundle() {
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   const [premium, setPremium] = useState<PremiumTierData | null>(null);
+  const [policy, setPolicy] = useState<PolicyConstants | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   useEffect(() => {
     let ok = true;
     loadDashboardBundle()
-      .then(({ dashboard: d, premium: p }) => {
+      .then(({ dashboard: d, premium: p, policy: pc }) => {
         if (ok) {
           setDashboard(d);
           setPremium(p);
+          setPolicy(pc);
         }
       })
       .catch((e: Error) => {
@@ -47,11 +54,11 @@ function useBundle() {
       ok = false;
     };
   }, []);
-  return { dashboard, premium, err, loading };
+  return { dashboard, premium, policy, err, loading };
 }
 
 export function App() {
-  const { dashboard: data, premium, err, loading } = useBundle();
+  const { dashboard: data, premium, policy, err, loading } = useBundle();
 
   if (loading) {
     return (
@@ -105,6 +112,8 @@ export function App() {
 
   const goldFiveYear = premium?.multi_year_observations.find((o) => o.id === "gold_vs_industry_5y") ?? null;
   const round2025 = premium?.tier_rounds.find((r) => r.effective.startsWith("2025")) ?? null;
+
+  const elasticity = computeGoldElasticity(tierSeries, premium);
 
   const tierHeroSubtitle =
     goldShareLatest != null && tierInsight.goldShareThen != null
@@ -298,6 +307,13 @@ export function App() {
               <PremiumRoundBarChart data={premium} />
               {tierSeries.length > 0 ? <TierGoldShareChart data={tierSeries} /> : null}
             </div>
+            {elasticity.elasticity != null && (
+              <ElasticityCallout
+                elasticity={elasticity}
+                baselineLabel={shortQuarterLabel(BASELINE_QUARTER)}
+                latestLabel={quarterLabel}
+              />
+            )}
           </>
         ) : (
           <p className="muted">
@@ -307,8 +323,47 @@ export function App() {
         )}
       </section>
 
+      <section className="insight-section" aria-labelledby="sec-mls">
+        <span className="section-eyebrow">2B · Tax-floor effect</span>
+        <h2 id="sec-mls" className="section-title">
+          Basic hospital is a tax product
+        </h2>
+        <InsightHeadline
+          title={"Above roughly $110k in singles income, the cheapest Basic hospital policy is cheaper than the Medicare Levy Surcharge you\u2019d otherwise pay to the ATO."}
+          subtitle="That creates a rational floor of MLS-liable households buying Basic purely to avoid the surcharge — a tax product, not a health product. Basic-tier persons are up ~19% since 2020 Q2, outpacing the ~13% growth in total hospital cover and consistent with this floor hardening."
+        />
+        {policy ? (
+          <MlsTaxFloorChart policy={policy} tierSeries={tierSeries} />
+        ) : (
+          <p className="muted">
+            Policy constants missing — add <code>public/data/policy_constants.json</code> to show
+            the MLS breakeven curve.
+          </p>
+        )}
+        <p className="insight-sub" style={{ marginTop: 12 }}>
+          MLS rates are piecewise in income (1.0% / 1.25% / 1.5% across three singles tiers above
+          the FY {policy?.mls.financial_year ?? "2024-25"} base threshold of $97,000). The dashed
+          black line is a representative cheapest Basic hospital premium — actual cheapest
+          products vary by state and insurer. Breakeven (vertical marker) shows where the two lines
+          cross; everything to the right is the shaded region where Basic is the rational tax-min
+          choice.
+        </p>
+      </section>
+
+      <section className="insight-section" aria-labelledby="sec-extras-gap">
+        <span className="section-eyebrow">2C · Affordability proxy</span>
+        <h2 id="sec-extras-gap" className="section-title">
+          Households keep extras, trim hospital
+        </h2>
+        <InsightHeadline
+          title="Extras coverage has grown a fraction faster than hospital coverage since 2020 Q2 — a small but monotonic gap consistent with affordability-driven choices."
+          subtitle="Extras cost a fraction of hospital cover and deliver frequent, visible benefits (dental, optical, physio). Under budget pressure households cut hospital tier — Gold to Silver/Bronze, or down to Basic for MLS reasons — while keeping extras."
+        />
+        <ExtrasVsHospitalGapChart national={data.national_quarterly} />
+      </section>
+
       <section className="insight-section" aria-labelledby="sec-age">
-        <span className="section-eyebrow">2B · Demographics as a driver</span>
+        <span className="section-eyebrow">2D · Demographics as a driver</span>
         <h2 id="sec-age" className="section-title">
           Who&apos;s joining, what are they buying?
         </h2>
@@ -333,6 +388,15 @@ export function App() {
               younger. A 0% reference line marks the zero-growth baseline.
             </p>
             <AgeCoverageChart data={data.age_coverage_quarterly} />
+            <InsightHeadline
+              title="The LHC-31 puzzle: coverage fell in 30–34 despite the Lifetime Health Cover loading."
+              subtitle={`Since ${shortQuarterLabel(data.age_coverage_quarterly[0].quarter)}, 25–29 coverage has climbed — consistent with the Age-Based Discount working — but 30–34 slipped from about 39.3% to 37.1%. Roughly 47,000 fewer 30–34s hold hospital cover than if the pre-reform rate had held. Likely drivers: the ABD discount cliff at 30, migration composition (permanent residents get a 12-month LHC grace period), and present bias against an abstract future loading.`}
+            />
+            <Lhc31AgePanel
+              ageQuarters={data.age_coverage_quarterly}
+              latestQuarter={latestQ}
+              baselineQuarter={data.age_coverage_quarterly[0].quarter}
+            />
             <div className="callout-box">
               <p>
                 <strong>Policy context.</strong> Australia&apos;s{" "}
@@ -425,6 +489,22 @@ export function App() {
               {premium.meta.last_reviewed}.
             </p>
           )}
+          {policy && (
+            <p>
+              <strong>Policy constants (MLS breakeven):</strong> {policy.meta.notes} Last reviewed{" "}
+              {policy.meta.last_reviewed}.
+            </p>
+          )}
+          <p>
+            <strong>Elasticity caveat:</strong> the price elasticity of Gold hospital demand shown
+            in section 2A is a back-of-envelope aggregate partial correlation (ΔQ% ÷ ΔP%) over
+            the {shortQuarterLabel(BASELINE_QUARTER)} → latest window, using the CHOICE 5-year
+            Gold premium observation and Gold insured-persons from APRA/DoH. It is <em>not</em> a
+            causal identification — confounded by the 2019 tier reform tail, COVID, demographic
+            shift, and within-Gold product-mix. The revenue-index statement assumes a flat
+            &quot;premium index&quot; per covered Gold life and ignores claims costs, so it is a
+            ceiling on the profit read.
+          </p>
           <p>
             <strong>Sources:</strong>
           </p>

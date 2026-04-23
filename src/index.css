@@ -310,6 +310,44 @@ h2.section-title {
   margin-bottom: 0;
 }
 
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem 1.25rem;
+  margin: 0.5rem 0 0.75rem;
+}
+
+@media (max-width: 640px) {
+  .stat-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.stat-grid .stat {
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--rule);
+}
+.stat-grid .stat .label {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--muted);
+  font-weight: 600;
+}
+.stat-grid .stat .value {
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  margin-top: 0.2rem;
+  line-height: 1.15;
+}
+.stat-grid .stat .hint {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-top: 0.15rem;
+}
+
 .big-stat {
   font-size: 1.35rem;
   font-weight: 600;
